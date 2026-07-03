@@ -30,14 +30,14 @@ const LiveDateTime = () => {
   }).format(currentTime);
 
   return (
-    <div className="flex items-center gap-2 justify-center mt-4 font-jakarta">
+    <div className="flex items-center gap-2 justify-center mt-4 font-jakarta transition-colors">
       {/* Box Jam (Biru Gelap) */}
-      <div className="bg-[#143C9C] text-white px-5 py-2 rounded-2xl font-bold text-lg shadow-sm">
+      <div className="bg-[#143C9C] dark:bg-blue-600 text-white px-5 py-2 rounded-2xl font-bold text-lg shadow-sm">
         {formatTime}
       </div>
 
       {/* Box Tanggal (Abu-abu Terang) */}
-      <div className="bg-[#F2F4F7] text-[#143C9C] px-5 py-2 rounded-2xl font-semibold text-base shadow-sm">
+      <div className="bg-[#F2F4F7] dark:bg-slate-800 text-[#143C9C] dark:text-blue-400 px-5 py-2 rounded-2xl font-semibold text-base shadow-sm">
         Sekarang hari <span className="capitalize">{formatDate}</span>
       </div>
     </div>

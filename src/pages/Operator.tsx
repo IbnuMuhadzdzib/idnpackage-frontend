@@ -10,7 +10,7 @@ function Operator() {
     }, []);
 
     return (
-        <div className="bg-white min-h-screen">
+        <div className="bg-white dark:bg-slate-900 dark:text-white min-h-screen transition-colors duration-300">
             <header>
                 <NavbarOperator />
             </header>
@@ -19,10 +19,10 @@ function Operator() {
                 
                 {/* Section 1: Greeting */}
                 <section>
-                    <h1 className='text-gray-900 font-bold text-3xl'>
+                    <h1 className='text-gray-900 dark:text-white font-bold text-3xl'>
                         Assalamu’alaikum, Pak &lt;Satpam&gt;!
                     </h1>
-                    <p className='text-gray-500 mt-2 text-base'>
+                    <p className='text-gray-500 dark:text-gray-400 mt-2 text-base'>
                         Antum yang sedang bertugas dalam menerima paket.
                     </p>
                 </section>

@@ -1,15 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import Navbar from '../components/layout/NavbarGeneral'
 import StatsCard from '../components/ui/StatsCard';
 import LiveDateTime from '../components/ui/LiveDateTime'
 import SearchFilterBar from '../components/ui/SearchFilterBar';
+import PackageTable from '../components/ui/PackageTable';
 
 import PackageIcon from '../assets/package_icon.png'
 import RecievedIcon from '../assets/hand_icon.png'
 import OfficeIcon from '../assets/building_icon.png'
 import PosIcon from '../assets/shield_icon.png'
-import PackageTable from '../components/ui/PackageTable';
+import PackageIconDark from '../assets/package_icon_dark.png'
+import RecievedIconDark from '../assets/hand_icon_dark.png'
+import OfficeIconDark from '../assets/building_icon_dark.png'
+import PosIconDark from '../assets/shield_icon_dark.png'
 
 function General() {
 
@@ -17,39 +21,63 @@ function General() {
         document.title = "General - IDN Paketku";
     }, []);
 
-    const statsData = [
+    const [activeFilter, setActiveFilter] = useState('Semua');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedRoom, setSelectedRoom] = useState('Semua Kamar');
+
+const statsData = [
     {
       id: 'total',
       title: 'Total Paket',
       count: 1,
-      icon: <img src={PackageIcon} alt="Total Paket" className="w-5 h-5 object-contain" />,
+      icon: (
+        <>
+          <img src={PackageIcon} alt="Total Paket" className="w-5 h-5 object-contain dark:hidden" />
+          <img src={PackageIconDark} alt="Total Paket" className="w-5 h-5 object-contain hidden dark:block" />
+        </>
+      ),
       isActive: true, // Card ini akan berwarna biru
     },
     {
       id: 'diterima',
       title: 'Paket Diterima',
       count: 0,
-      icon: <img src={RecievedIcon} alt="Paket Diterima" className="w-5 h-5 object-contain" />,
+      icon: (
+        <>
+          <img src={RecievedIcon} alt="Paket Diterima" className="w-5 h-5 object-contain dark:hidden" />
+          <img src={RecievedIconDark} alt="Paket Diterima" className="w-5 h-5 object-contain hidden dark:block" />
+        </>
+      ),
       isActive: false,
     },
     {
       id: 'kantor',
       title: 'Paket di Kantor',
       count: 0,
-      icon: <img src={OfficeIcon} alt="Paket di Kantor" className="w-5 h-5 object-contain" />,
+      icon: (
+        <>
+          <img src={OfficeIcon} alt="Paket di Kantor" className="w-5 h-5 object-contain dark:hidden" />
+          <img src={OfficeIconDark} alt="Paket di Kantor" className="w-5 h-5 object-contain hidden dark:block" />
+        </>
+      ),
       isActive: false,
     },
     {
       id: 'pos',
       title: 'Paket di Pos',
       count: 0,
-      icon: <img src={PosIcon} alt="Paket di Pos" className="w-5 h-5 object-contain" />,
+      icon: (
+        <>
+          <img src={PosIcon} alt="Paket di Pos" className="w-5 h-5 object-contain dark:hidden" />
+          <img src={PosIconDark} alt="Paket di Pos" className="w-5 h-5 object-contain hidden dark:block" />
+        </>
+      ),
       isActive: false,
     },
   ];
 
     return (
-        <div>
+        <div className="dark:bg-slate-900 min-h-screen transition-colors duration-300">
             <header>
                 <Navbar />
             </header>
@@ -57,7 +85,7 @@ function General() {
             <main className='px-10 font-jakarta space-y-12 mt-20 pb-12'>
                 <section>
                    <div>
-                        <h1 className='text-center text-[#143C9C] font-bold text-4xl'>
+                        <h1 className='text-center text-[#143C9C] dark:text-blue-400 font-bold text-4xl'>
                             Selamat datang di Halaman <br /> Pencarian Paket Santri!
                         </h1>
                    </div>
@@ -67,10 +95,17 @@ function General() {
                 </section>
 
                 <section>
-                    <SearchFilterBar />
+                    <SearchFilterBar 
+                        activeFilter={activeFilter} 
+                        setActiveFilter={setActiveFilter} 
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        selectedRoom={selectedRoom}
+                        setSelectedRoom={setSelectedRoom}
+                    />
                 </section>
 
-                <section className='border border-[#B7B7B7] rounded-lg p-4 space-y-4'>
+                <section className='border border-[#B7B7B7] dark:border-slate-700 rounded-lg p-4 space-y-4'>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             
                         {/* 2. Looping data array menjadi komponen StatCard */}
@@ -86,7 +121,7 @@ function General() {
 
                     </div>
 
-                    <PackageTable />
+                    <PackageTable activeFilter={activeFilter} searchQuery={searchQuery} selectedRoom={selectedRoom} />
                 </section>
             </main>
         </div>

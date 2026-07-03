@@ -10,6 +10,12 @@ const ThemeToggle = () => {
     const root = document.documentElement;
     // Set atribut data-theme di tag <html> agar DaisyUI berubah warna
     root.setAttribute('data-theme', theme);
+    // Tambahkan class 'dark' agar Tailwind dark: prefix juga bekerja
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
     // Simpan pilihan ke localStorage
     localStorage.setItem('theme', theme);
   }, [theme]);

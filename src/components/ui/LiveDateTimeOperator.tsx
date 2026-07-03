@@ -26,16 +26,16 @@ const LiveDateTimeOperator= () => {
   }).format(currentTime);
 
   return (
-    <div className="flex items-center gap-3 bg-[#F2F4F7] px-3 py-1.5 rounded-xl shadow-sm font-jakarta">
+    <div className="flex items-center gap-3 bg-[#F2F4F7] dark:bg-slate-800 px-3 py-1.5 rounded-xl shadow-sm font-jakarta transition-colors">
       {/* Box Jam Biru */}
-      <div className="bg-[#143C9C] text-white px-3 py-1 rounded-full font-bold text-sm">
+      <div className="bg-[#143C9C] dark:bg-blue-600 text-white px-3 py-1 rounded-full font-bold text-sm">
         {formatTime}
       </div>
 
       {/* Teks Tanggal */}
-      <div className="text-xs text-gray-800 leading-tight pr-2">
-        <p className="font-semibold">Sekarang hari {formatDate.split(',')[0]},</p>
-        <p className="text-gray-500">{formatDate.split(',')[1]}</p>
+      <div className="text-xs text-gray-800 dark:text-gray-300 leading-tight pr-2 py-1.5">
+        <p className="font-semibold dark:text-white">Sekarang hari {formatDate.split(',')[0]},</p>
+        <p className="text-gray-500 dark:text-gray-400">{formatDate.split(',')[1]}</p>
       </div>
     </div>
   );
