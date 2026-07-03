@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import Navbar from '../components/layout/Navbar'
+import Navbar from '../components/layout/NavbarGeneral'
 import StatsCard from '../components/ui/StatsCard';
 import LiveDateTime from '../components/ui/LiveDateTime'
 import SearchFilterBar from '../components/ui/SearchFilterBar';
