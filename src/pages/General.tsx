@@ -25,23 +25,58 @@ function General() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRoom, setSelectedRoom] = useState('Semua Kamar');
 
+    // --- Stats: Fetch semua paket dan hitung per-kategori ---
+    const [stats, setStats] = useState({
+        total: 0,
+        taken: 0,
+        dormitory_office: 0,
+        security_post: 0,
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const response = await fetch('http://localhost:8080/packages');
+                const responseData = await response.json();
+                const packages = Array.isArray(responseData)
+                    ? responseData
+                    : Array.isArray(responseData?.data)
+                    ? responseData.data
+                    : [];
+
+                setStats({
+                    total: packages.length,
+                    taken: packages.filter((p: any) => p.location === 'taken').length,
+                    dormitory_office: packages.filter((p: any) => p.location === 'dormitory_office').length,
+                    security_post: packages.filter((p: any) => p.location === 'security_post').length,
+                });
+            } catch (error) {
+                console.error('Gagal fetch stats paket:', error);
+            }
+        };
+        fetchStats();
+        // Refresh stats setiap 30 detik
+        const interval = setInterval(fetchStats, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
 const statsData = [
     {
       id: 'total',
       title: 'Total Paket',
-      count: 1,
+      count: stats.total,
       icon: (
         <>
           <img src={PackageIcon} alt="Total Paket" className="w-5 h-5 object-contain dark:hidden" />
           <img src={PackageIconDark} alt="Total Paket" className="w-5 h-5 object-contain hidden dark:block" />
         </>
       ),
-      isActive: true, // Card ini akan berwarna biru
+      isActive: true,
     },
     {
       id: 'diterima',
       title: 'Paket Diterima',
-      count: 0,
+      count: stats.taken,
       icon: (
         <>
           <img src={RecievedIcon} alt="Paket Diterima" className="w-5 h-5 object-contain dark:hidden" />
@@ -53,7 +88,7 @@ const statsData = [
     {
       id: 'kantor',
       title: 'Paket di Kantor',
-      count: 0,
+      count: stats.dormitory_office,
       icon: (
         <>
           <img src={OfficeIcon} alt="Paket di Kantor" className="w-5 h-5 object-contain dark:hidden" />
@@ -65,7 +100,7 @@ const statsData = [
     {
       id: 'pos',
       title: 'Paket di Pos',
-      count: 0,
+      count: stats.security_post,
       icon: (
         <>
           <img src={PosIcon} alt="Paket di Pos" className="w-5 h-5 object-contain dark:hidden" />
@@ -121,7 +156,7 @@ const statsData = [
 
                     </div>
 
-                    <PackageTable activeFilter={activeFilter} searchQuery={searchQuery} selectedRoom={selectedRoom} />
+                    <PackageTable activeFilter={activeFilter} setActiveFilter={setActiveFilter} searchQuery={searchQuery} selectedRoom={selectedRoom} />
                 </section>
             </main>
         </div>

@@ -22,7 +22,6 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
   selectedRoom = 'Semua Kamar',
   setSelectedRoom = () => {}
 }) => {
-  const filterOptions = ['Semua', 'Sudah Diterima', 'Di Pos', 'Di Kantor'];
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -111,24 +110,6 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Tombol Filter */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {filterOptions.map((filter) => (
-          <button
-            key={filter}
-            onClick={() => setActiveFilter(filter)} 
-            className={`py-3 rounded-xl font-bold text-sm transition-all duration-200 shadow-sm
-              ${activeFilter === filter 
-                ? 'bg-[#143C9C] text-white dark:bg-blue-600'          
-                : 'bg-[#F2F4F7] text-[#143C9C] hover:bg-[#e4e8f1] dark:bg-slate-800 dark:text-blue-400 dark:hover:bg-slate-700' 
-              }
-            `}
-          >
-            {filter}
-          </button>
-        ))}
       </div>
 
     </div>

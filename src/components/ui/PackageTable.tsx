@@ -24,12 +24,14 @@ interface PackageItem {
 
 interface PackageTableProps {
   activeFilter?: string;
+  setActiveFilter?: (filter: string) => void;
   searchQuery?: string;
   selectedRoom?: string;
 }
 
 const PackageTable: React.FC<PackageTableProps> = ({ 
-  activeFilter = 'Semua', 
+  activeFilter = 'Semua',
+  setActiveFilter = () => {},
   searchQuery = '',
   selectedRoom = 'Semua Kamar'
 }) => {
@@ -143,6 +145,26 @@ const PackageTable: React.FC<PackageTableProps> = ({
   });
 
   return (
+    <>
+
+            {/* Tombol Filter Lokasi */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 px-4 py-3 border-gray-300 dark:border-slate-700">
+          {(['Semua', 'Sudah Diterima', 'Di Pos', 'Di Kantor'] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`py-3 rounded-xl font-bold text-sm transition-all duration-200
+                ${activeFilter === filter
+                  ? 'bg-[#143C9C] text-white dark:bg-blue-600'
+                  : 'bg-[#F2F2F2] dark:bg-slate-700 text-[#143C9C] dark:text-blue-400 border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600'
+                }
+              `}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+
     <div className="w-full font-sans">
       <div className="bg-[#F6F7F9] dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-2xl overflow-hidden transition-colors">
         
@@ -288,6 +310,8 @@ const PackageTable: React.FC<PackageTableProps> = ({
         </div>
       )}
     </div>
+
+    </>
   );
 };
 
