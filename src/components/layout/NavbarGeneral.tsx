@@ -7,7 +7,7 @@ import ThemeToggle from '../ui/ThemeToggle'; // Sesuaikan path file kamu
 const Navbar = () => {
   return (
     <div className="navbar bg-base-100 dark:bg-slate-900 px-6 py-4 flex justify-between items-center rounded-2xl">
-        <div className='bg-[#F3F3F3] dark:bg-slate-800 px-4 py-2 rounded-lg'>
+        <div className='bg-[#F3F3F3] dark:bg-slate-800 border border-grey-100 dark:border-slate-700 px-4 py-2 rounded-lg'>
             <div className='text-[#143C9C] dark:text-blue-400 font-bold text-3xl'>
                 <h1 className='flex justify-center items-center gap-2 h-fit'>
                     <span>

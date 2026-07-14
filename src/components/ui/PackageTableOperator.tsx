@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 
 const PackageTableOperator = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date()); 
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Data Dummy Sesuai Gambar
   const tableData = [
-    { 
-      id: 1, 
-      name: 'Abidal Farzan Rosyidi', 
-      room: 'Saung 6', 
-      expedition: 'JTE', 
+    {
+      id: 1,
+      name: 'Abidal Farzan Rosyidi',
+      room: 'Saung 6',
+      expedition: 'JTE',
       time: '10:40 WIB',
       status: 'Di Pos',
       createdAt: new Date().toISOString()
@@ -24,7 +24,7 @@ const PackageTableOperator = () => {
   // Helper Custom Calendar (Logika sama seperti sebelumnya)
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
-  
+
   const handlePrevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
   const handleNextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   const handleDateSelect = (day) => {
@@ -53,20 +53,20 @@ const PackageTableOperator = () => {
   return (
     <div className="w-full font-sans relative">
       <div className="bg-[#F6F7F9] dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden transition-colors">
-        
+
         {/* Header Section */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Data Paket</h2>
-          
+
           <div className="flex items-center gap-3">
             {/* Tombol Tambah Paket */}
             <button className="flex items-center gap-2 bg-[#143C9C] dark:bg-blue-600 hover:bg-blue-800 dark:hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
               Tambah Paket
             </button>
 
             {/* Tombol Date Picker */}
-            <button 
+            <button
               onClick={() => setIsDatePickerOpen(true)}
               className="flex items-center gap-2 px-4 py-2.5 text-[#143C9C] dark:text-blue-300 bg-white dark:bg-slate-800 border border-[#143C9C] dark:border-blue-400 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"
             >
@@ -99,26 +99,26 @@ const PackageTableOperator = () => {
               ) : (
                 filteredData.map((row) => (
                   <tr key={row.id} className="hover:bg-white dark:hover:bg-slate-700 transition-colors">
-                  <td className="px-6 py-5 text-gray-800 dark:text-gray-200 font-medium">{row.name}</td>
-                  <td className="px-6 py-5 text-gray-800 dark:text-gray-200">{row.room}</td>
-                  <td className="px-6 py-5 text-gray-800 dark:text-gray-200">{row.expedition}</td>
-                  <td className="px-6 py-5 text-gray-800 dark:text-gray-200">{row.time}</td>
-                  <td className="px-6 py-5">
-                    <span className="px-4 py-1.5 rounded-full font-medium text-[13px] inline-block min-w-[90px] text-center bg-[#FCE154] text-gray-900">
-                      {row.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5 flex gap-2">
-                    {/* Action Buttons Operator */}
-                    <button className="bg-[#65B7FF] hover:bg-blue-400 text-gray-900 px-4 py-1.5 rounded-full font-medium text-[13px] transition-colors">
-                      Pindahkan
-                    </button>
-                    <button className="bg-[#63DF8A] hover:bg-green-400 text-gray-900 px-4 py-1.5 rounded-full font-medium text-[13px] transition-colors">
-                      Diambil
-                    </button>
-                  </td>
-                </tr>
-              ))
+                    <td className="px-6 py-5 text-gray-800 dark:text-gray-200 font-medium">{row.name}</td>
+                    <td className="px-6 py-5 text-gray-800 dark:text-gray-200">{row.room}</td>
+                    <td className="px-6 py-5 text-gray-800 dark:text-gray-200">{row.expedition}</td>
+                    <td className="px-6 py-5 text-gray-800 dark:text-gray-200">{row.time}</td>
+                    <td className="px-6 py-5">
+                      <span className="px-4 py-1.5 rounded-full font-medium text-[13px] inline-block min-w-[90px] text-center bg-[#FCE154] text-gray-900">
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 flex gap-2">
+                      {/* Action Buttons Operator */}
+                      <button className="bg-[#65B7FF] hover:bg-blue-400 text-gray-900 px-4 py-1.5 rounded-full font-medium text-[13px] transition-colors">
+                        Pindahkan
+                      </button>
+                      <button className="bg-[#63DF8A] hover:bg-green-400 text-gray-900 px-4 py-1.5 rounded-full font-medium text-[13px] transition-colors">
+                        Diambil
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -135,8 +135,8 @@ const PackageTableOperator = () => {
             <h3 className="font-semibold text-gray-800 dark:text-gray-200">
               {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
             </h3>
-            <button 
-              onClick={handleNextMonth} 
+            <button
+              onClick={handleNextMonth}
               disabled={currentMonth.getMonth() === today.getMonth() && currentMonth.getFullYear() === today.getFullYear()}
               className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
@@ -156,7 +156,7 @@ const PackageTableOperator = () => {
               const cellDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
               const isFutureDate = cellDate > today;
               const isSelected = selectedDate.getDate() === day && selectedDate.getMonth() === currentMonth.getMonth() && selectedDate.getFullYear() === currentMonth.getFullYear();
-              
+
               return (
                 <button
                   key={day}
@@ -173,9 +173,9 @@ const PackageTableOperator = () => {
               );
             })}
           </div>
-          
-          <button 
-            onClick={() => setIsDatePickerOpen(false)} 
+
+          <button
+            onClick={() => setIsDatePickerOpen(false)}
             className="w-full mt-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
           >
             Tutup
@@ -187,3 +187,4 @@ const PackageTableOperator = () => {
 };
 
 export default PackageTableOperator;
+
