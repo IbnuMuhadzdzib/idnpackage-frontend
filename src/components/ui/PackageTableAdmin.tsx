@@ -54,7 +54,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon, isActive = fa
 );
 
 // --- MAIN COMPONENT ---
-const PackageTableOperator: React.FC = () => {
+const PackageTableAdmin: React.FC = () => {
   // Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -406,10 +406,10 @@ const PackageTableOperator: React.FC = () => {
   );
 };
 
-export { PackageTableOperator as default };
-export type { PackageTableOperatorRef };
+export { PackageTableAdmin as default };
+export type { PackageTableAdminRef };
 
 // --- Ref type for parent to open modal ---
-interface PackageTableOperatorRef {
+interface PackageTableAdminRef {
   openAddModal: () => void;
 }

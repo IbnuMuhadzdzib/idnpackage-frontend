@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const ThemeToggle = () => {
   // Ambil tema awal dari localStorage, jika belum ada default ke 'light'

@@ -15,8 +15,8 @@ interface SearchFilterBarProps {
 }
 
 const SearchFilterBar: React.FC<SearchFilterBarProps> = ({ 
-  activeFilter, 
-  setActiveFilter,
+  activeFilter: _activeFilter, 
+  setActiveFilter: _setActiveFilter,
   searchQuery = '',
   setSearchQuery = () => {},
   selectedRoom = 'Semua Kamar',

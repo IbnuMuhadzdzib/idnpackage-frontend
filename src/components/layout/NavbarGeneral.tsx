@@ -1,4 +1,4 @@
-import React from 'react';
+
 import LogoLight from '../../assets/icon.png'
 import LogoDark from '../../assets/icon_white.png'
 

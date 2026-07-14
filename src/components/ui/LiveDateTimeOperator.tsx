@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const LiveDateTimeOperator= () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -14,6 +14,7 @@ const LiveDateTimeOperator= () => {
   const formatTime = new Intl.DateTimeFormat('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
+    second: '2-digit',
     hour12: false,
   }).format(currentTime);
 
