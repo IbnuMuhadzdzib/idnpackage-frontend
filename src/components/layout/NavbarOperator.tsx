@@ -12,7 +12,7 @@ const NavbarOperator = () => {
       {/* Kiri: Logo & Search */}
       <div className="flex items-center gap-6">
         {/* Logo Placeholder */}
-        <div className="w-14 h-14 bg-blue-50 dark:bg-slate-800 text-[#143C9C] dark:text-blue-400 rounded-xl flex items-center justify-center font-bold text-2xl border border-blue-100 dark:border-slate-700">
+        <div className="w-14 h-14 bg-[#F3F3F3] dark:bg-slate-800 text-[#143C9C] dark:text-blue-400 rounded-xl flex items-center justify-center font-bold text-2xl border border-grey-100 dark:border-slate-700">
           <img src={LogoLight} alt="" className='size-10 dark:hidden' />
           <img src={LogoDark} alt="" className='size-10 hidden dark:block' />
         </div>
@@ -20,13 +20,13 @@ const NavbarOperator = () => {
         {/* Search Bar */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5 text-blue-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           <input
             type="text"
-            className="block w-64 pl-11 pr-4 py-4 bg-[#F2F4F7] dark:bg-slate-800 border-transparent rounded-lg text-sm placeholder-blue-400 dark:text-white focus:border-blue-500 focus:bg-white dark:focus:bg-slate-700 focus:ring-0 outline-none transition-colors"
+            className="block w-64 pl-11 pr-4 py-4 bg-[#F2F4F7] dark:bg-slate-800 border-transparent rounded-lg text-sm placeholder-blue-400 dark:placeholder-gray-400  focus:border-blue-500 focus:bg-white dark:focus:bg-slate-700 focus:ring-0 outline-none transition-colors"
             placeholder="Search"
           />
         </div>
