@@ -8,7 +8,7 @@ function Auth() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
-    
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -38,7 +38,7 @@ function Auth() {
 
         try {
             const payload = { email, password };
-            
+
             const response = await fetch('https://idnpackage-backend-production.up.railway.app/auth-v2/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -104,30 +104,30 @@ function Auth() {
                 )}
 
                 <div className="absolute top-6 right-6">
-        <ThemeToggle />
-      </div>
+                    <ThemeToggle />
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                        <input 
-                          type="email" 
-                          required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl 
-                                     bg-white text-gray-900 placeholder-gray-400
-                                     dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:placeholder-gray-500
-                                     focus:ring-2 focus:ring-[#143C9C] outline-none transition-all"
-                          placeholder="nama@email.com"
+                        <input
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl 
+                                bg-white text-gray-900 placeholder-gray-400
+                                dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:placeholder-gray-500
+                                focus:ring-2 focus:ring-[#143C9C] outline-none transition-all"
+                            placeholder="nama@email.com"
                         />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
                         <div className="relative">
-                            <input 
-                                type={showPassword ? "text" : "password"} 
+                            <input
+                                type={showPassword ? "text" : "password"}
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -148,8 +148,8 @@ function Auth() {
                         </div>
                     </div>
 
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         disabled={isLoading}
                         className="w-full bg-[#143C9C] hover:bg-blue-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
                     >

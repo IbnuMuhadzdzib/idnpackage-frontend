@@ -16,10 +16,11 @@ import PackageIconDark from '../assets/package_icon_dark.png';
 import RecievedIconDark from '../assets/hand_icon_dark.png';
 import OfficeIconDark from '../assets/building_icon_dark.png';
 import PosIconDark from '../assets/shield_icon_dark.png';
+import { UserModal } from '../components/ui/AddUserModal';
 
 // --- TYPE DEFINITIONS ---
 interface Student { id: number; name: string; }
-interface Room    { id: number; name: string; }
+interface Room { id: number; name: string; }
 interface PackageItem {
   id: number;
   studentId?: Student;
@@ -78,7 +79,7 @@ function Operator() {
         const user = JSON.parse(userStr);
         if (user.role === 'admin') setUserRole('admin');
         if (user.name) setUserName(user.name);
-      } catch (e) {}
+      } catch (e) { }
     }
   }, []);
 
@@ -90,6 +91,12 @@ function Operator() {
 
   // --- Modal State ---
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // Tambahkan baris di bawah ini untuk trigger refresh user:
+  const [userRefreshKey, setUserRefreshKey] = useState(0);
+
+  const fetchUser = () => {
+    setUserRefreshKey(prev => prev + 1);
+  };
 
   // --- Date picker ---
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -117,9 +124,9 @@ function Operator() {
       setTableData(packages);
       setStats({
         total: packages.length,
-        taken:             packages.filter(p => p.location === 'taken').length,
-        dormitory_office:  packages.filter(p => p.location === 'dormitory_office').length,
-        security_post:     packages.filter(p => p.location === 'security_post').length,
+        taken: packages.filter(p => p.location === 'taken').length,
+        dormitory_office: packages.filter(p => p.location === 'dormitory_office').length,
+        security_post: packages.filter(p => p.location === 'security_post').length,
       });
     } catch {
       setTableData([]);
@@ -142,7 +149,7 @@ function Operator() {
       const token = localStorage.getItem('token');
       await fetch(`https://idnpackage-backend-production.up.railway.app/packages/${pkg.id}`, {
         method: 'PATCH',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -162,7 +169,7 @@ function Operator() {
       const token = localStorage.getItem('token');
       await fetch(`https://idnpackage-backend-production.up.railway.app/packages/${pkg.id}`, {
         method: 'PATCH',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -179,10 +186,10 @@ function Operator() {
   // --- HELPERS ---
   const getLocationBadge = (loc: string) => {
     switch (loc) {
-      case 'security_post':    return { label: 'Di Pos',    color: 'bg-[#FCE154] text-gray-900' };
+      case 'security_post': return { label: 'Di Pos', color: 'bg-[#FCE154] text-gray-900' };
       case 'dormitory_office': return { label: 'Di Kantor', color: 'bg-[#63DF8A] text-gray-900' };
-      case 'taken':            return { label: 'Diterima',  color: 'bg-[#65B7FF] text-gray-900' };
-      default:                 return { label: loc || '—',  color: 'bg-gray-200 text-gray-900' };
+      case 'taken': return { label: 'Diterima', color: 'bg-[#65B7FF] text-gray-900' };
+      default: return { label: loc || '—', color: 'bg-gray-200 text-gray-900' };
     }
   };
 
@@ -190,14 +197,14 @@ function Operator() {
     new Date(ds).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
 
   const formatDate = (d: Date) => {
-    const m = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const m = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     return `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()}`;
   };
 
   // --- DATE PICKER ---
-  const daysInMonth     = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
-  const today           = new Date(); today.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
   const handlePrevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
   const handleNextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   const handleDateSelect = (day: number) => {
@@ -210,8 +217,8 @@ function Operator() {
     if (!row.createdAt) return false;
     const d = new Date(row.createdAt);
     return d.getDate() === selectedDate.getDate() &&
-           d.getMonth() === selectedDate.getMonth() &&
-           d.getFullYear() === selectedDate.getFullYear();
+      d.getMonth() === selectedDate.getMonth() &&
+      d.getFullYear() === selectedDate.getFullYear();
   });
 
   // --- STATS CARD DATA ---
@@ -262,6 +269,9 @@ function Operator() {
     },
   ];
 
+  // State untuk kontrol buka/tutup modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className="bg-white dark:bg-slate-900 dark:text-white min-h-screen transition-colors duration-300 font-jakarta">
 
@@ -308,6 +318,7 @@ function Operator() {
             {userRole === 'admin' && activeTab === 'users' && (
               <button
                 id="btn-tambah-user"
+                onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-2 px-5 py-2.5 bg-[#143C9C] hover:bg-blue-800 active:bg-blue-900 text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,7 +346,7 @@ function Operator() {
 
           {/* --- ADMIN USERS TAB --- */}
           {userRole === 'admin' && activeTab === 'users' && (
-            <UserDataAdmin />
+            <UserDataAdmin key={userRefreshKey} />
           )}
 
           {/* --- PACKAGES TAB FOR ADMIN --- */}
@@ -357,115 +368,115 @@ function Operator() {
               <section>
                 <div className="bg-[#F6F7F9] dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm">
 
-              {/* Table header */}
-              <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 gap-3">
-                <h2 className="text-base font-bold text-gray-900 dark:text-white">Data Paket</h2>
-                <button
-                  onClick={() => setIsDatePickerOpen(true)}
-                  className="flex items-center gap-2 px-3.5 py-2 text-[#143C9C] dark:text-blue-300 border border-[#143C9C]/40 dark:border-blue-400/40 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-700 font-medium text-sm transition-all bg-white dark:bg-slate-900"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  {formatDate(selectedDate)}
-                </button>
-              </div>
+                  {/* Table header */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 gap-3">
+                    <h2 className="text-base font-bold text-gray-900 dark:text-white">Data Paket</h2>
+                    <button
+                      onClick={() => setIsDatePickerOpen(true)}
+                      className="flex items-center gap-2 px-3.5 py-2 text-[#143C9C] dark:text-blue-300 border border-[#143C9C]/40 dark:border-blue-400/40 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-700 font-medium text-sm transition-all bg-white dark:bg-slate-900"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {formatDate(selectedDate)}
+                    </button>
+                  </div>
 
-              {/* Table body */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left whitespace-nowrap">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-slate-700">
-                      {['Nama (Penerima)','Kamar','Ekspedisi','Jam Masuk','Status','Action'].map(h => (
-                        <th key={h} className="px-6 py-3.5 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={6} className="text-center py-14">
-                          <div className="flex flex-col items-center gap-3 text-gray-400">
-                            <svg className="w-7 h-7 animate-spin text-[#143C9C]" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                            </svg>
-                            <span className="text-sm">Memuat data paket...</span>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : filteredData.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="text-center py-16">
-                          <div className="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500">
-                            <svg className="w-10 h-10 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                            </svg>
-                            <p className="text-sm font-medium">Belum ada data paket</p>
-                            <p className="text-xs">untuk tanggal {formatDate(selectedDate)}</p>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredData.map(row => {
-                        const badge = getLocationBadge(row.location);
-                        const isPindahLoading = actionLoading?.id === row.id && actionLoading?.type === 'pindah';
-                        const isAmbilLoading  = actionLoading?.id === row.id && actionLoading?.type === 'ambil';
-                        const isTaken = row.location === 'taken';
-                        return (
-                          <tr key={row.id} className="hover:bg-gray-100/60 dark:hover:bg-slate-700/50 transition-colors border-b border-gray-100 dark:border-slate-700/50 last:border-0">
-                            <td className="px-6 py-4 text-gray-800 dark:text-gray-200 font-medium">
-                              {row.studentId?.name || 'Tidak diketahui'}
-                            </td>
-                            <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{row.roomId?.name || '-'}</td>
-                            <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{row.ekspedisi || 'JTE'}</td>
-                            <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{formatTime(row.createdAt)}</td>
-                            <td className="px-6 py-4">
-                              <span className={`px-3.5 py-1.5 rounded-full font-medium text-xs ${badge.color}`}>
-                                {badge.label}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handlePindahkan(row)}
-                                  disabled={!!actionLoading || isTaken}
-                                  className="bg-[#65B7FF] hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 px-3.5 py-1.5 rounded-full font-medium text-xs transition-all flex items-center gap-1 hover:shadow-sm"
-                                >
-                                  {isPindahLoading && (
-                                    <svg className="w-3 h-3 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                                    </svg>
-                                  )}
-                                  Pindahkan
-                                </button>
-                                <button
-                                  onClick={() => handleDiambil(row)}
-                                  disabled={!!actionLoading || isTaken}
-                                  className="bg-[#63DF8A] hover:bg-green-400 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 px-3.5 py-1.5 rounded-full font-medium text-xs transition-all flex items-center gap-1 hover:shadow-sm"
-                                >
-                                  {isAmbilLoading && (
-                                    <svg className="w-3 h-3 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                                    </svg>
-                                  )}
-                                  Diambil
-                                </button>
+                  {/* Table body */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left whitespace-nowrap">
+                      <thead>
+                        <tr className="border-b border-gray-200 dark:border-slate-700">
+                          {['Nama (Penerima)', 'Kamar', 'Ekspedisi', 'Jam Masuk', 'Status', 'Action'].map(h => (
+                            <th key={h} className="px-6 py-3.5 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {isLoading ? (
+                          <tr>
+                            <td colSpan={6} className="text-center py-14">
+                              <div className="flex flex-col items-center gap-3 text-gray-400">
+                                <svg className="w-7 h-7 animate-spin text-[#143C9C]" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                <span className="text-sm">Memuat data paket...</span>
                               </div>
                             </td>
                           </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              </div>
-            </section>
-          </>
-        )}
+                        ) : filteredData.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="text-center py-16">
+                              <div className="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500">
+                                <svg className="w-10 h-10 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                </svg>
+                                <p className="text-sm font-medium">Belum ada data paket</p>
+                                <p className="text-xs">untuk tanggal {formatDate(selectedDate)}</p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredData.map(row => {
+                            const badge = getLocationBadge(row.location);
+                            const isPindahLoading = actionLoading?.id === row.id && actionLoading?.type === 'pindah';
+                            const isAmbilLoading = actionLoading?.id === row.id && actionLoading?.type === 'ambil';
+                            const isTaken = row.location === 'taken';
+                            return (
+                              <tr key={row.id} className="hover:bg-gray-100/60 dark:hover:bg-slate-700/50 transition-colors border-b border-gray-100 dark:border-slate-700/50 last:border-0">
+                                <td className="px-6 py-4 text-gray-800 dark:text-gray-200 font-medium">
+                                  {row.studentId?.name || 'Tidak diketahui'}
+                                </td>
+                                <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{row.roomId?.name || '-'}</td>
+                                <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{row.ekspedisi || 'JTE'}</td>
+                                <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{formatTime(row.createdAt)}</td>
+                                <td className="px-6 py-4">
+                                  <span className={`px-3.5 py-1.5 rounded-full font-medium text-xs ${badge.color}`}>
+                                    {badge.label}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handlePindahkan(row)}
+                                      disabled={!!actionLoading || isTaken}
+                                      className="bg-[#65B7FF] hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 px-3.5 py-1.5 rounded-full font-medium text-xs transition-all flex items-center gap-1 hover:shadow-sm"
+                                    >
+                                      {isPindahLoading && (
+                                        <svg className="w-3 h-3 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                      )}
+                                      Pindahkan
+                                    </button>
+                                    <button
+                                      onClick={() => handleDiambil(row)}
+                                      disabled={!!actionLoading || isTaken}
+                                      className="bg-[#63DF8A] hover:bg-green-400 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 px-3.5 py-1.5 rounded-full font-medium text-xs transition-all flex items-center gap-1 hover:shadow-sm"
+                                    >
+                                      {isAmbilLoading && (
+                                        <svg className="w-3 h-3 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                      )}
+                                      Diambil
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+            </>
+          )}
         </main>
       </div>
 
@@ -500,7 +511,7 @@ function Operator() {
               </button>
             </div>
             <div className="grid grid-cols-7 gap-1 text-center mb-2">
-              {['Mg','Sn','Sl','Rb','Km','Jm','Sb'].map(d => (
+              {['Mg', 'Sn', 'Sl', 'Rb', 'Km', 'Jm', 'Sb'].map(d => (
                 <div key={d} className="text-xs font-medium text-gray-400 py-1">{d}</div>
               ))}
             </div>
@@ -534,6 +545,13 @@ function Operator() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={fetchPackages}
+      />
+
+      {/* --- Add User Modal --- */}
+      <UserModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchUser} // <- Tambahin baris ini!
       />
 
       <style>{`

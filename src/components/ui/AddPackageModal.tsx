@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// --- Type Definitions ---
 interface Student {
   id: number;
   name: string;
@@ -12,46 +13,56 @@ interface Room {
   students?: Student[];
 }
 
+interface PackageItem {
+  id: number;
+  studentId?: Student;
+  roomId?: Room;
+  location: string;
+  notes: string | null;
+  photoUrl: string | null;
+  createdAt: string;
+}
+
 interface AddPackageModalProps {
   isOpen: boolean;
+  packageToEdit?: PackageItem | null; // Tambahan prop untuk mode edit
   onClose: () => void;
   onSuccess?: () => void;
 }
 
 const LOCATION_OPTIONS = [
-  { value: 'security_post',   label: 'Pos Satpam' },
+  { value: 'security_post', label: 'Pos Satpam' },
   { value: 'dormitory_office', label: 'Kantor Asrama' },
 ];
 
-const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSuccess }) => {
+const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit, onClose, onSuccess }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
-  const [isSubmitting,  setIsSubmitting]  = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError,   setSubmitError]   = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Form fields — match exact API spec from Postman
+  // Form fields
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
-  const [selectedRoomId,    setSelectedRoomId]    = useState<string>('');
-  const [selectedLocation,  setSelectedLocation]  = useState<string>('security_post');
-  const [notes,    setNotes]    = useState<string>('');
-  
-  // Local preview (for image drop)
+  const [selectedRoomId, setSelectedRoomId] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<string>('security_post');
+  const [notes, setNotes] = useState<string>('');
+
+  // Local preview
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ------------------------------------------------------------------
-  // Fetch students & rooms when modal opens
+  // Fetch rooms when modal opens
   // ------------------------------------------------------------------
   useEffect(() => {
     if (!isOpen) return;
 
-    // Cukup fetch /rooms karena response-nya sudah include relasi students
     const fetchRooms = async () => {
       setIsLoadingRooms(true);
       try {
         const token = localStorage.getItem('token');
-        const res  = await fetch('https://idnpackage-backend-production.up.railway.app/rooms', {
+        const res = await fetch('https://idnpackage-backend-production.up.railway.app/rooms', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -67,26 +78,37 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
     fetchRooms();
   }, [isOpen]);
 
-  // Reset form when modal closes
+  // ------------------------------------------------------------------
+  // Handle Form Modes (Add vs Edit Data Initializer)
+  // ------------------------------------------------------------------
   useEffect(() => {
-    if (!isOpen) {
-      setSelectedStudentId('');
-      setSelectedRoomId('');
-      setSelectedLocation('security_post');
-      setNotes('');
-      setPhotoPreview(null);
+    if (isOpen) {
+      if (packageToEdit) {
+        // Mode Edit: Isi form dengan data yang sudah ada
+        setSelectedRoomId(packageToEdit.roomId ? String(packageToEdit.roomId.id) : '');
+        setSelectedStudentId(packageToEdit.studentId ? String(packageToEdit.studentId.id) : '');
+        setSelectedLocation(packageToEdit.location || 'security_post');
+        setNotes(packageToEdit.notes || '');
+        setPhotoPreview(packageToEdit.photoUrl || null);
+      } else {
+        // Mode Tambah: Reset form jadi kosong bersih
+        setSelectedStudentId('');
+        setSelectedRoomId('');
+        setSelectedLocation('security_post');
+        setNotes('');
+        setPhotoPreview(null);
+      }
       setSubmitSuccess(false);
       setSubmitError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, packageToEdit]);
 
   // ------------------------------------------------------------------
-  // Photo handling — local preview only, photoUrl is sent as string
+  // Photo handling
   // ------------------------------------------------------------------
   const handleDropZoneClick = () => fileInputRef.current?.click();
 
   const handleFileChange = (file: File) => {
-    // Generate local preview for UX
     const reader = new FileReader();
     reader.onload = (ev) => {
       const result = ev.target?.result as string;
@@ -108,8 +130,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
   };
 
   // ------------------------------------------------------------------
-  // Submit — POST /packages with JSON body matching the Postman spec:
-  // { studentId, roomId, location, notes, createdBy }
+  // Submit handler (POST or PUT dynamic)
   // ------------------------------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,33 +145,40 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
           const userObj = JSON.parse(userStr);
           const extractedId = userObj.userId || userObj.id;
           if (extractedId) currentUserId = Number(extractedId);
-        } catch (e) {}
+        } catch (e) { }
       }
 
       const payload = {
         studentId: Number(selectedStudentId),
-        roomId:    Number(selectedRoomId),
-        location:  selectedLocation,
-        notes:     notes || "",
-        photoUrl:  "",
+        roomId: Number(selectedRoomId),
+        location: selectedLocation,
+        notes: notes || "",
+        photoUrl: photoPreview || "",
         createdBy: currentUserId,
       };
 
       const token = localStorage.getItem('token');
-      const res = await fetch('https://idnpackage-backend-production.up.railway.app/packages', {
-        method:  'POST',
-        headers: { 
+
+      // Tentukan URL & Method dinamis berdasarkan status mode form
+      const url = packageToEdit
+        ? `https://idnpackage-backend-production.up.railway.app/packages/${packageToEdit.id}`
+        : 'https://idnpackage-backend-production.up.railway.app/packages';
+      const method = packageToEdit ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method: method,
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body:    JSON.stringify(payload),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        const errMsg  = Array.isArray(errData?.message)
+        const errMsg = Array.isArray(errData?.message)
           ? errData.message.join(', ')
-          : errData?.message || `Gagal menambahkan paket (${res.status})`;
+          : errData?.message || `Gagal memproses data paket (${res.status})`;
         throw new Error(errMsg);
       }
 
@@ -167,19 +195,12 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
     }
   };
 
-  // Derive students dari rooms yang sudah ada relasinya
+  // Derive students dari rooms yang cocok
   const selectedRoom = rooms.find(r => r.id === Number(selectedRoomId));
   const filteredStudents: Student[] = selectedRoom?.students ?? [];
 
-  useEffect(() => {
-    setSelectedStudentId('');
-  }, [selectedRoomId]);
-
   if (!isOpen) return null;
 
-  // ------------------------------------------------------------------
-  // Render
-  // ------------------------------------------------------------------
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
@@ -200,7 +221,9 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h2 className="font-bold text-gray-800 dark:text-white text-base">Form Tambah Data Paket</h2>
+          <h2 className="font-bold text-gray-800 dark:text-white text-base">
+            {packageToEdit ? 'Form Edit Data Paket' : 'Form Tambah Data Paket'}
+          </h2>
         </div>
 
         {/* ---- Form Body ---- */}
@@ -279,7 +302,10 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
                 <select
                   required
                   value={selectedRoomId}
-                  onChange={(e) => setSelectedRoomId(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedRoomId(e.target.value);
+                    setSelectedStudentId(''); // Langsung reset nama santri di sini saat pindah kamar
+                  }}
                   disabled={isLoadingRooms}
                   className="w-full px-3 py-2.5 pr-9 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 appearance-none transition-all cursor-pointer disabled:opacity-60"
                 >
@@ -349,7 +375,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
               <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
               </svg>
-              Paket berhasil ditambahkan!
+              {packageToEdit ? 'Data paket berhasil diperbarui!' : 'Paket berhasil ditambahkan!'}
             </div>
           )}
 
@@ -365,7 +391,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Menambahkan...
+                {packageToEdit ? 'Memperbarui...' : 'Menambahkan...'}
               </>
             ) : submitSuccess ? (
               <>
@@ -375,7 +401,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
                 Berhasil!
               </>
             ) : (
-              'Tambah Paket'
+              packageToEdit ? 'Simpan Perubahan' : 'Tambah Paket'
             )}
           </button>
         </form>
@@ -384,7 +410,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
       <style>{`
         @keyframes modalIn {
           from { opacity: 0; transform: scale(0.92) translateY(14px); }
-          to   { opacity: 1; transform: scale(1)  translateY(0); }
+          to   { opacity: 1; transform: scale(1)   translateY(0); }
         }
       `}</style>
     </div>

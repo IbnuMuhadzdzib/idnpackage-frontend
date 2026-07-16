@@ -1,22 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { UserModal } from '../ui/AddUserModal';
 
 import PosIcon from '../../assets/shield_icon.png';
 import PosIconDark from '../../assets/shield_icon_dark.png';
 import OfficeIcon from '../../assets/building_icon.png';
 import OfficeIconDark from '../../assets/building_icon_dark.png';
 
-// --- TYPES ---
 interface UserItem {
   id: number;
   name: string;
   email: string;
   role: string;
   createdAt: string;
+  room?: string;
 }
 
 type FilterTab = 'semua' | 'operator' | 'teacher';
 
-// --- MINI STATS CARD ---
 interface StatsCardProps {
   title: string;
   count: number;
@@ -32,12 +32,11 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon }) => (
   </div>
 );
 
-// --- ROLE BADGE ---
 const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
   const map: Record<string, { label: string; color: string }> = {
-    operator: { label: 'Satpam',  color: 'bg-[#65B7FF] text-gray-900' },
-    teacher:  { label: 'Ustadz',  color: 'bg-[#FCE154] text-gray-900' },
-    admin:    { label: 'Admin',   color: 'bg-[#63DF8A] text-gray-900' },
+    operator: { label: 'Satpam', color: 'bg-[#65B7FF] text-gray-900' },
+    teacher: { label: 'Ustadz', color: 'bg-[#FCE154] text-gray-900' },
+    admin: { label: 'Admin', color: 'bg-[#63DF8A] text-gray-900' },
   };
   const badge = map[role] ?? { label: role, color: 'bg-gray-200 text-gray-700' };
   return (
@@ -47,26 +46,28 @@ const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
   );
 };
 
-// --- MAIN COMPONENT ---
 const UserDataAdmin: React.FC = () => {
-  const [users, setUsers]       = useState<UserItem[]>([]);
+  const [users, setUsers] = useState<UserItem[]>([]);
   const [isLoading, setLoading] = useState(true);
-  const [filter, setFilter]     = useState<FilterTab>('semua');
+  const [filter, setFilter] = useState<FilterTab>('semua');
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<UserItem | null>(null);
 
   // --- FETCH USERS ---
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const res   = await fetch('https://idnpackage-backend-production.up.railway.app/users', {
+      const res = await fetch('https://idnpackage-backend-production.up.railway.app/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
       const list: UserItem[] = Array.isArray(json)
         ? json
         : Array.isArray(json?.data)
-        ? json.data
-        : [];
+          ? json.data
+          : [];
       setUsers(list);
     } catch {
       setUsers([]);
@@ -79,32 +80,65 @@ const UserDataAdmin: React.FC = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  // --- COUNTS ---
-  const totalOperator = users.filter(u => u.role === 'operator').length;
-  const totalTeacher  = users.filter(u => u.role === 'teacher').length;
+  const handleOpenAddModal = () => {
+    setUserToEdit(null);
+    setIsModalOpen(true);
+  };
 
-  // --- FILTERED DATA ---
+  const handleOpenEditModal = (user: UserItem) => {
+    setUserToEdit(user);
+    setIsModalOpen(true);
+  };
+
+  // --- HANDLER DELETE USER DENGAN POP UP KONFIRMASI ---
+  const handleDeleteUser = async (id: number, name: string) => {
+    const confirmMsg = `Apakah Anda yakin ingin menghapus pengguna "${name}"?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`https://idnpackage-backend-production.up.railway.app/users/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        fetchUsers(); // Refresh tabel setelah sukses
+      } else {
+        alert('Gagal menghapus pengguna.');
+      }
+    } catch (error) {
+      console.error('Gagal menghapus pengguna:', error);
+      alert('Terjadi kesalahan saat menghapus pengguna.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalOperator = users.filter(u => u.role === 'operator').length;
+  const totalTeacher = users.filter(u => u.role === 'teacher').length;
+
   const filteredUsers = filter === 'semua'
     ? users
     : users.filter(u => u.role === filter);
 
   const tabs: { key: FilterTab; label: string }[] = [
-    { key: 'semua',    label: 'Semua'  },
+    { key: 'semua', label: 'Semua' },
     { key: 'operator', label: 'Satpam' },
-    { key: 'teacher',  label: 'Ustadz' },
+    { key: 'teacher', label: 'Ustadz' },
   ];
 
   return (
     <div className="space-y-6">
-
-      {/* --- Stats Cards --- */}
+      {/* Stats Cards */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <StatsCard
           title="Total Satpam"
           count={totalOperator}
           icon={
             <>
-              <img src={PosIcon}     alt="" className="w-5 h-5 object-contain dark:hidden" />
+              <img src={PosIcon} alt="" className="w-5 h-5 object-contain dark:hidden" />
               <img src={PosIconDark} alt="" className="w-5 h-5 object-contain hidden dark:block" />
             </>
           }
@@ -114,19 +148,20 @@ const UserDataAdmin: React.FC = () => {
           count={totalTeacher}
           icon={
             <>
-              <img src={OfficeIcon}     alt="" className="w-5 h-5 object-contain dark:hidden" />
+              <img src={OfficeIcon} alt="" className="w-5 h-5 object-contain dark:hidden" />
               <img src={OfficeIconDark} alt="" className="w-5 h-5 object-contain hidden dark:block" />
             </>
           }
         />
       </section>
 
-      {/* --- Data Pengguna Table --- */}
+      {/* Data Pengguna Table */}
       <section className="bg-[#F6F7F9] dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm">
-
         {/* Table Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 gap-3">
-          <h2 className="text-base font-bold text-gray-900 dark:text-white">Data Pengguna</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">Data Pengguna</h2>
+          </div>
 
           {/* Filter Tabs */}
           <div className="flex items-center gap-2">
@@ -134,11 +169,10 @@ const UserDataAdmin: React.FC = () => {
               <button
                 key={tab.key}
                 onClick={() => setFilter(tab.key)}
-                className={`px-5 py-1.5 text-sm font-medium rounded-full transition-colors ${
-                  filter === tab.key
-                    ? 'bg-[#143C9C] text-white'
-                    : 'text-[#143C9C] dark:text-blue-400 border border-[#143C9C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 bg-white dark:bg-slate-900'
-                }`}
+                className={`px-5 py-1.5 text-sm font-medium rounded-full transition-colors ${filter === tab.key
+                  ? 'bg-[#143C9C] text-white'
+                  : 'text-[#143C9C] dark:text-blue-400 border border-[#143C9C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 bg-white dark:bg-slate-900'
+                  }`}
               >
                 {tab.label}
               </button>
@@ -146,7 +180,7 @@ const UserDataAdmin: React.FC = () => {
           </div>
         </div>
 
-        {/* Table */}
+        {/* Table Content */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left whitespace-nowrap">
             <thead>
@@ -199,25 +233,28 @@ const UserDataAdmin: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        {/* Dummy Cek */}
-                        <button
-                          title="Cek detail"
-                          className="bg-[#143C9C] hover:bg-blue-800 text-white px-4 py-1.5 rounded-full font-medium text-xs transition-all flex items-center gap-1.5 shadow-sm"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                          </svg>
-                          Cek
-                        </button>
-                        {/* Dummy Edit */}
+
                         <button
                           title="Edit"
+                          onClick={() => handleOpenEditModal(user)}
                           className="bg-[#143C9C] hover:bg-blue-800 text-white px-4 py-1.5 rounded-full font-medium text-xs transition-all flex items-center gap-1.5 shadow-sm"
                         >
                           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                           </svg>
                           Edit
+                        </button>
+
+                        {/* BUTTON CEK SUDAH BERUBAH MENJADI HAPUS */}
+                        <button
+                          title="Hapus"
+                          onClick={() => handleDeleteUser(user.id, user.name)}
+                          className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full font-medium text-xs transition-all flex items-center gap-1.5 shadow-sm"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Hapus
                         </button>
                       </div>
                     </td>
@@ -229,6 +266,12 @@ const UserDataAdmin: React.FC = () => {
         </div>
       </section>
 
+      <UserModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        userToEdit={userToEdit}
+        onSuccess={fetchUsers}
+      />
     </div>
   );
 };
