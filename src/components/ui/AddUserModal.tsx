@@ -1,83 +1,150 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-interface AddUserModalProps {
-    isOpen: boolean;
-    onClose: () => void;
+// Definisikan tipe data item yang sama dengan di komponen utama
+interface UserItem {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    createdAt: string;
+    room?: string; // Menampung field room opsional
 }
 
-export const AddUserModal: React.FC<AddUserModalProps> = ({
+interface UserModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSuccess?: () => void;
+    userToEdit?: UserItem | null; // Jika ada datanya = MODE EDIT, jika null = MODE TAMBAH
+}
+
+export const UserModal: React.FC<UserModalProps> = ({
     isOpen,
     onClose,
+    onSuccess,
+    userToEdit,
 }) => {
-    // 1. State untuk form data
+    const isEditMode = !!userToEdit;
+
+    // 1. State Management Form
     const [formData, setFormData] = useState({
         name: "",
         email: "",
-        role: "Pos Satpam", // default value
-        room: "Saung 1", // default value
+        role: "operator",
+        room: "Saung 1",
     });
-    const [loading, setLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+
+    // 2. Efek untuk memuat data jika masuk Mode Edit atau Reset Form saat ditutup
+    useEffect(() => {
+        if (isOpen) {
+            if (userToEdit) {
+                // Mode Edit: Isi form dengan data user yang dipilih
+                setFormData({
+                    name: userToEdit.name,
+                    email: userToEdit.email,
+                    role: userToEdit.role,
+                    room: userToEdit.room || "Saung 1",
+                });
+            } else {
+                // Mode Tambah: Reset form ke default
+                setFormData({
+                    name: "",
+                    email: "",
+                    role: "operator",
+                    room: "Saung 1",
+                });
+            }
+            setSubmitSuccess(false);
+            setSubmitError(null);
+        }
+    }, [isOpen, userToEdit]);
 
     if (!isOpen) return null;
 
-    // 2. Handle Perubahan Input
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // 3. Handle Submit Post (Endpoint Blank)
+    // 3. Handle Submit (Dinamis POST / PUT)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setSubmitError(null);
+        setIsSubmitting(true);
 
         try {
-            // PENTING: Ubah URL ini dengan endpoint asli lu nanti
-            const response = await fetch("https://api.contoh.com/v1/users", {
-                method: "POST",
+            const token = localStorage.getItem("token");
+
+            // Tentukan URL & Method berdasarkan mode
+            const url = isEditMode
+                ? `https://idnpackage-backend-production.up.railway.app/users/${userToEdit?.id}`
+                : "https://idnpackage-backend-production.up.railway.app/users";
+
+            const method = isEditMode ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method: method,
                 headers: {
                     "Content-Type": "application/json",
+                    ...(token && { Authorization: `Bearer ${token}` }),
                 },
                 body: JSON.stringify(formData),
             });
 
-            if (response.ok) {
-                alert("User berhasil ditambahkan!");
-                onClose(); // Tutup modal setelah sukses
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                const errMsg = errData?.message || `Gagal memproses data (${response.status})`;
+                throw new Error(errMsg);
             }
-        } catch (error) {
-            console.error("Error posting data:", error);
+
+            setSubmitSuccess(true);
+            setTimeout(() => {
+                onSuccess?.(); // Panggil fungsi refresh data di komponen utama
+                onClose();
+            }, 1200);
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : "Terjadi kesalahan";
+            setSubmitError(msg);
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
     return (
-        // Backdrop / Overlay Hitam Transparan
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            {/* Container Modal (rounded-3xl & shadow sesuai gambar) */}
-            <div className="w-full max-w-3xl rounded-[2rem] bg-[#f4f4f4] p-8 shadow-xl">
-                {/* Header Modal */}
-                <div className="mb-6 flex items-center gap-3">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) onClose();
+            }}
+        >
+            <div
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto"
+                style={{ animation: "modalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards" }}
+            >
+                {/* ---- Header ---- */}
+                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-slate-700">
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
+                        className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors group rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
                     >
-                        {/* Icon Back Simpel (<) */}
-                        <span className="text-xl font-bold text-gray-700">&lt;</span>
+                        <svg className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+                        </svg>
                     </button>
-                    <h2 className="text-xl font-semibold text-gray-800">
-                        Form Tambah Data User
+                    <h2 className="font-bold text-gray-800 dark:text-white text-base">
+                        {isEditMode ? "Form Edit Data User" : "Form Tambah Data User"}
                     </h2>
                 </div>
 
-                {/* Form Input */}
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Input Nama Pengguna */}
+                {/* ---- Form Body ---- */}
+                <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
                     <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-400">
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                             Nama Pengguna <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -87,13 +154,12 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                             onChange={handleChange}
                             placeholder="Masukkan nama pengguna"
                             required
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none"
+                            className="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 transition-all"
                         />
                     </div>
 
-                    {/* Input Email */}
                     <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-400">
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                             Email <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -103,87 +169,108 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                             onChange={handleChange}
                             placeholder="Masukkan email aktif"
                             required
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none"
+                            className="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 transition-all"
                         />
                     </div>
 
-                    {/* Row untuk Role & Kamar (Grid 2 Kolom) */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {/* Dropdown Role */}
+                    <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="mb-2 block text-sm font-medium text-gray-400">
+                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                                 Role <span className="text-red-500">*</span>
                             </label>
-                            <select
-                                name="role"
-                                value={formData.role}
-                                onChange={handleChange}
-                                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none"
-                            >
-                                <option value="Pos Satpam">Pos Satpam</option>
-                                <option value="Admin">Admin</option>
-                                <option value="Musyrif">Musyrif</option>
-                            </select>
+                            <div className="relative">
+                                <select
+                                    name="role"
+                                    value={formData.role}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2.5 pr-9 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 appearance-none transition-all cursor-pointer"
+                                >
+                                    <option value="operator">Satpam</option>
+                                    <option value="teacher">Ustadz</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                                <ChevronDown />
+                            </div>
                         </div>
 
-                        {/* Dropdown Kamar/Saung */}
                         <div>
-                            <label className="mb-2 block text-sm font-medium text-gray-400">
+                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                                 Kamar/Saung <span className="text-red-500">*</span>
                             </label>
-                            <select
-                                name="room"
-                                value={formData.room}
-                                onChange={handleChange}
-                                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none"
-                            >
-                                <option value="Saung 1">Saung 1</option>
-                                <option value="Saung 2">Saung 2</option>
-                                <option value="Saung 3">Saung 3</option>
-                            </select>
+                            <div className="relative">
+                                <select
+                                    name="room"
+                                    value={formData.room}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2.5 pr-9 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 appearance-none transition-all cursor-pointer"
+                                >
+                                    <option value="Saung 1">Saung 1</option>
+                                    <option value="Saung 2">Saung 2</option>
+                                    <option value="Saung 3">Saung 3</option>
+                                </select>
+                                <ChevronDown />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Section Button di Kanan Bawah */}
-                    <div className="flex justify-end pt-4">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="rounded-xl bg-[#1d4ed8] px-8 py-3.5 font-semibold text-white transition-all hover:bg-blue-800 disabled:bg-gray-400"
-                        >
-                            {loading ? "Menyimpan..." : "Tambah Paket"}
-                        </button>
-                    </div>
+                    {submitError && (
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm rounded-xl px-4 py-3 flex items-start gap-2">
+                            <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{submitError}</span>
+                        </div>
+                    )}
+
+                    {submitSuccess && (
+                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm rounded-xl px-4 py-3 flex items-center gap-2">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            {isEditMode ? "Perubahan berhasil disimpan!" : "User berhasil ditambahkan!"}
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={isSubmitting || submitSuccess}
+                        className="w-full py-3 bg-[#143C9C] hover:bg-blue-800 disabled:bg-blue-400/80 dark:disabled:bg-blue-800/50 text-white font-semibold rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                Menyimpan...
+                            </>
+                        ) : submitSuccess ? (
+                            "Berhasil!"
+                        ) : isEditMode ? (
+                            "Simpan Perubahan"
+                        ) : (
+                            "Tambah User Baru"
+                        )}
+                    </button>
                 </form>
             </div>
+
+            {/* Inject Style Animasi yang Sama */}
+            <style>{`
+                @keyframes modalIn {
+                    from { opacity: 0; transform: scale(0.92) translateY(14px); }
+                    to   { opacity: 1; transform: scale(1)    translateY(0); }
+                }
+            `}</style>
         </div>
     );
 };
 
-/* 
-
-Cara Pemanggilan-nya:
-
-1. Import : 
-    import { AddUserModal } from '../ui/AddUserModal';
-
-2. Buat State :
-    // State untuk kontrol buka/tutup modal
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
-3. Tambah Button :
-    <button 
-        onClick={() => setIsModalOpen(true)}
-        className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700"
-    >
-        + Tambah User Baru
-    </button>
-
-4. Tambah Tampilan Pop up nya di bawah :
-    <AddUserModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-    />
-
-
-*/
+// ---- Helper Component: Custom Chevron Down Icon ----
+const ChevronDown = () => (
+    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+    </div>
+);

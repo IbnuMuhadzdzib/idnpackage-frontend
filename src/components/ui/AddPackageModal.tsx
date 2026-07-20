@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+// --- Type Definitions ---
 interface Student {
   id: number;
   name: string;
@@ -12,14 +13,25 @@ interface Room {
   students?: Student[];
 }
 
+interface PackageItem {
+  id: number;
+  studentId?: Student;
+  roomId?: Room;
+  location: string;
+  notes: string | null;
+  photoUrl: string | null;
+  createdAt: string;
+}
+
 interface AddPackageModalProps {
   isOpen: boolean;
+  packageToEdit?: PackageItem | null; // Tambahan prop untuk mode edit
   onClose: () => void;
   onSuccess?: () => void;
 }
 
 const LOCATION_OPTIONS = [
-  { value: 'security_post',   label: 'Pos Satpam' },
+  { value: 'security_post', label: 'Pos Satpam' },
   { value: 'dormitory_office', label: 'Kantor Asrama' },
 ];
 
@@ -50,9 +62,9 @@ const compressImage = (dataUrl: string, maxPx = 1024, quality = 0.78): Promise<s
 const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
-  const [isSubmitting,  setIsSubmitting]  = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError,   setSubmitError]   = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Form fields
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
@@ -79,7 +91,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
       setIsLoadingRooms(true);
       try {
         const token = localStorage.getItem('token');
-        const res  = await fetch('https://idnpackage-backend-production.up.railway.app/rooms', {
+        const res = await fetch('https://idnpackage-backend-production.up.railway.app/rooms', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -94,21 +106,33 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
     fetchRooms();
   }, [isOpen]);
 
-  // Reset form when modal closes
+  // ------------------------------------------------------------------
+  // Handle Form Modes (Add vs Edit Data Initializer)
+  // ------------------------------------------------------------------
   useEffect(() => {
-    if (!isOpen) {
-      setSelectedStudentId('');
-      setSelectedRoomId('');
-      setSelectedLocation('security_post');
-      setNotes('');
-      setPhotoPreview(null);
+    if (isOpen) {
+      if (packageToEdit) {
+        // Mode Edit: Isi form dengan data yang sudah ada
+        setSelectedRoomId(packageToEdit.roomId ? String(packageToEdit.roomId.id) : '');
+        setSelectedStudentId(packageToEdit.studentId ? String(packageToEdit.studentId.id) : '');
+        setSelectedLocation(packageToEdit.location || 'security_post');
+        setNotes(packageToEdit.notes || '');
+        setPhotoPreview(packageToEdit.photoUrl || null);
+      } else {
+        // Mode Tambah: Reset form jadi kosong bersih
+        setSelectedStudentId('');
+        setSelectedRoomId('');
+        setSelectedLocation('security_post');
+        setNotes('');
+        setPhotoPreview(null);
+      }
       setSubmitSuccess(false);
       setSubmitError(null);
       stopCamera();
       setShowCamera(false);
       setCameraError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, packageToEdit]);
 
   // ------------------------------------------------------------------
   // Camera helpers
@@ -202,7 +226,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
           const userObj = JSON.parse(userStr);
           const extractedId = userObj.userId || userObj.id;
           if (extractedId) currentUserId = Number(extractedId);
-        } catch (e) {}
+        } catch (e) { }
       }
 
       const payload = {
@@ -215,9 +239,16 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
       };
 
       const token = localStorage.getItem('token');
-      const res = await fetch('https://idnpackage-backend-production.up.railway.app/packages', {
-        method:  'POST',
-        headers: { 
+
+      // Tentukan URL & Method dinamis berdasarkan status mode form
+      const url = packageToEdit
+        ? `https://idnpackage-backend-production.up.railway.app/packages/${packageToEdit.id}`
+        : 'https://idnpackage-backend-production.up.railway.app/packages';
+      const method = packageToEdit ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method: method,
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -226,9 +257,9 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        const errMsg  = Array.isArray(errData?.message)
+        const errMsg = Array.isArray(errData?.message)
           ? errData.message.join(', ')
-          : errData?.message || `Gagal menambahkan paket (${res.status})`;
+          : errData?.message || `Gagal memproses data paket (${res.status})`;
         throw new Error(errMsg);
       }
 
@@ -249,15 +280,8 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
   const selectedRoom = rooms.find(r => r.id === Number(selectedRoomId));
   const filteredStudents: Student[] = selectedRoom?.students ?? [];
 
-  useEffect(() => {
-    setSelectedStudentId('');
-  }, [selectedRoomId]);
-
   if (!isOpen) return null;
 
-  // ------------------------------------------------------------------
-  // Render
-  // ------------------------------------------------------------------
   return (
     <>
       {/* ===== CAMERA OVERLAY ===== */}
