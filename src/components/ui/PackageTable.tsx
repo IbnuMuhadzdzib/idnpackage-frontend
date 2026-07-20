@@ -332,6 +332,9 @@ const PackageTable: React.FC<PackageTableProps> = ({
           setSelectedPackage(null);
         }} 
         packageData={selectedPackage} 
+        onStatusChange={(updatedPkg) => {
+          setTableData(prev => prev.map(p => p.id === updatedPkg.id ? { ...p, location: updatedPkg.location } : p));
+        }}
       />
     </div>
 
