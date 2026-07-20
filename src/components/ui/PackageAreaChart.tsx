@@ -66,18 +66,10 @@ const PackageAreaChart: React.FC<PackageAreaChartProps> = ({ onCekData }) => {
           }
         });
 
-        // If all zero (unlikely in real app), use demo curve so the chart isn't blank
-        const hasData = monthLabels.some((m) => m.value > 0);
-        if (!hasData) {
-          const demo = [15, 27, 34, 29, 36, 50];
-          monthLabels.forEach((m, i) => { m.value = demo[i]; });
-        }
-
         setChartData(monthLabels);
       } catch {
-        // fallback demo data matching the design image
-        const demo = [15, 27, 34, 29, 36, 50];
-        setChartData((prev) => prev.map((m, i) => ({ ...m, value: demo[i] })));
+        // If fetch fails, keep the initial zero state
+        setChartData(buildMonthLabels());
       }
     };
 

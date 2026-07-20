@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { CustomDropdown } from './CustomDropdown';
 
 // --- Type Definitions ---
 interface Student {
@@ -461,31 +462,16 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                 Nama Penerima <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <select
-                  required
-                  value={selectedStudentId}
-                  onChange={(e) => setSelectedStudentId(e.target.value)}
-                  disabled={isLoadingRooms || !selectedRoomId}
-                  className="w-full px-3 py-2.5 pr-9 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 appearance-none transition-all cursor-pointer disabled:opacity-60"
-                >
-                  {!selectedRoomId ? (
-                    <option value="">Pilih Kamar/Saung terlebih dahulu</option>
-                  ) : isLoadingRooms ? (
-                    <option value="">Memuat data santri...</option>
-                  ) : filteredStudents.length === 0 ? (
-                    <option value="">Tidak ada data santri di kamar ini</option>
-                  ) : (
-                    <>
-                      <option value="" disabled>Pilih Nama Penerima</option>
-                      {filteredStudents.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </>
-                  )}
-                </select>
-                <ChevronDown />
-              </div>
+              <CustomDropdown
+                options={[
+                  { value: '', label: !selectedRoomId ? 'Pilih Kamar/Saung terlebih dahulu' : isLoadingRooms ? 'Memuat data santri...' : filteredStudents.length === 0 ? 'Tidak ada data santri di kamar ini' : 'Pilih Nama Penerima' },
+                  ...filteredStudents.map(s => ({ value: String(s.id), label: s.name }))
+                ]}
+                value={selectedStudentId}
+                onChange={setSelectedStudentId}
+                placeholder="Pilih Nama Penerima"
+                disabled={isLoadingRooms || !selectedRoomId}
+              />
             </div>
 
             {/* Kamar & Lokasi */}
@@ -495,30 +481,13 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   Kamar/Saung <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <select
-                    required
-                    value={selectedRoomId}
-                    onChange={(e) => {
-                      setSelectedRoomId(e.target.value);
-                      setSelectedStudentId(''); // Reset nama penerima jika kamar diubah
-                    }}
-                    disabled={isLoadingRooms}
-                    className="w-full px-3 py-2.5 pr-9 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 appearance-none transition-all cursor-pointer disabled:opacity-60"
-                  >
-                    <option value="" disabled>Pilih Kamar/Saung</option>
-                    {isLoadingRooms ? (
-                      <option value="">Memuat...</option>
-                    ) : rooms.length === 0 ? (
-                      <option value="">Tidak ada kamar</option>
-                    ) : (
-                      rooms.map((r) => (
-                        <option key={r.id} value={r.id}>{r.name}</option>
-                      ))
-                    )}
-                  </select>
-                  <ChevronDown />
-                </div>
+                <CustomDropdown
+                  options={rooms.map(r => ({ value: String(r.id), label: r.name }))}
+                  value={selectedRoomId}
+                  onChange={(val) => { setSelectedRoomId(val); setSelectedStudentId(''); }}
+                  placeholder="Pilih Kamar/Saung"
+                  disabled={isLoadingRooms}
+                />
               </div>
 
               {/* Lokasi */}
@@ -526,19 +495,12 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   Lokasi <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <select
-                    required
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
-                    className="w-full px-3 py-2.5 pr-9 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 appearance-none transition-all cursor-pointer"
-                  >
-                    {LOCATION_OPTIONS.map((loc) => (
-                      <option key={loc.value} value={loc.value}>{loc.label}</option>
-                    ))}
-                  </select>
-                  <ChevronDown />
-                </div>
+                <CustomDropdown
+                  options={LOCATION_OPTIONS.map(loc => ({ value: loc.value, label: loc.label }))}
+                  value={selectedLocation}
+                  onChange={setSelectedLocation}
+                  placeholder="Pilih Lokasi"
+                />
               </div>
             </div>
 
@@ -615,13 +577,6 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
   );
 };
 
-// ---- Helper: chevron icon ----
-const ChevronDown = () => (
-  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-    </svg>
-  </div>
-);
 
 export default AddPackageModal;
+
