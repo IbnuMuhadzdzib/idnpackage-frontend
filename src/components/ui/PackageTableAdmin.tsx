@@ -122,7 +122,7 @@ const PackageTableAdmin: React.FC = () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8080/packages', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/packages`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const responseData = await response.json();
@@ -166,7 +166,7 @@ const PackageTableAdmin: React.FC = () => {
           const token = localStorage.getItem('token');
           const results = await Promise.all(
             idsToDelete.map((id) =>
-              fetch(`http://localhost:8080/packages/${id}`, {
+              fetch(`${import.meta.env.VITE_API_URL}/packages/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` },
               })
@@ -198,7 +198,7 @@ const PackageTableAdmin: React.FC = () => {
           const token = localStorage.getItem('token');
           const results = await Promise.all(
             ids.map((id) =>
-              fetch(`http://localhost:8080/packages/${id}`, {
+              fetch(`${import.meta.env.VITE_API_URL}/packages/${id}`, {
                 method: 'PATCH',
                 headers: { 
                   'Content-Type': 'application/json',

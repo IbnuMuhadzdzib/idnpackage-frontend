@@ -23,9 +23,28 @@ function General() {
 
     const [activeFilter, setActiveFilter] = useState('Semua');
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedRoom, setSelectedRoom] = useState('Semua Kamar');
 
-    // --- Stats: Fetch semua paket dan hitung per-kategori ---
+    // Inisialisasi filter kamar dari data user yang sedang login
+    const getDefaultRoom = () => {
+        try {
+            const raw = localStorage.getItem('user');
+            if (raw) {
+                const user = JSON.parse(raw);
+                if (user?.roomName) return user.roomName;
+            }
+            // Cek juga dari token payload jika user disimpan di cara lain
+            const token = localStorage.getItem('token');
+            if (token) {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload?.roomName) return payload.roomName;
+            }
+        } catch { /* ignore */ }
+        return 'Semua Kamar';
+    };
+
+    const [selectedRoom, setSelectedRoom] = useState(getDefaultRoom);
+
+    // --- Stats: Fetch semua paket dan hitung per-kategori sesuai filter kamar ---
     const [stats, setStats] = useState({
         total: 0,
         taken: 0,
@@ -37,17 +56,24 @@ function General() {
         const fetchStats = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch('http://localhost:8080/packages', {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/packages`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
                 const responseData = await response.json();
-                const packages = Array.isArray(responseData)
+                let packages = Array.isArray(responseData)
                     ? responseData
                     : Array.isArray(responseData?.data)
                     ? responseData.data
                     : [];
+
+                // Filter berdasarkan kamar jika bukan "Semua Kamar"
+                if (selectedRoom !== 'Semua Kamar') {
+                    packages = packages.filter(
+                        (p: any) => p.roomId?.name === selectedRoom
+                    );
+                }
 
                 setStats({
                     total: packages.length,
@@ -63,7 +89,7 @@ function General() {
         // Refresh stats setiap 30 detik
         const interval = setInterval(fetchStats, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [selectedRoom]);
 
 const statsData = [
     {

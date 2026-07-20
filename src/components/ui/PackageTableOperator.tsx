@@ -74,7 +74,7 @@ const PackageTableOperator: React.FC = () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8080/packages', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/packages`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

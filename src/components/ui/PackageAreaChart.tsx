@@ -41,7 +41,7 @@ const PackageAreaChart: React.FC<PackageAreaChartProps> = ({ onCekData }) => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:8080/packages', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/packages`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const raw = await res.json();

@@ -91,7 +91,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
       setIsLoadingRooms(true);
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:8080/rooms', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/rooms`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -242,8 +242,8 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
 
       // Tentukan URL & Method dinamis berdasarkan status mode form
       const url = packageToEdit
-        ? `http://localhost:8080/packages/${packageToEdit.id}`
-        : 'http://localhost:8080/packages';
+        ? `${import.meta.env.VITE_API_URL}/packages/${packageToEdit.id}`
+        : `${import.meta.env.VITE_API_URL}/packages`;
       const method = packageToEdit ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {

@@ -105,7 +105,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:8080/students/bulk', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/students/bulk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

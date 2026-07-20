@@ -13,7 +13,8 @@ interface UserItem {
   email: string;
   role: string;
   createdAt: string;
-  room?: string;
+  roomId?: number | null;
+  room?: { id: number; name: string } | null;
 }
 
 type FilterTab = 'semua' | 'admin' | 'operator' | 'teacher';
@@ -76,7 +77,7 @@ const UserDataAdmin: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:8080/users', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
@@ -115,7 +116,7 @@ const UserDataAdmin: React.FC = () => {
         try {
           setLoading(true);
           const token = localStorage.getItem('token');
-          const res = await fetch(`http://localhost:8080/users/${id}`, {
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${id}`, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
           });

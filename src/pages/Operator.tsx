@@ -119,7 +119,7 @@ function Operator() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:8080/packages', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/packages`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -152,7 +152,7 @@ function Operator() {
     setActionLoading({ id: pkg.id, type: 'pindah' });
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:8080/packages/${pkg.id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/packages/${pkg.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -172,7 +172,7 @@ function Operator() {
     setActionLoading({ id: pkg.id, type: 'ambil' });
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:8080/packages/${pkg.id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/packages/${pkg.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

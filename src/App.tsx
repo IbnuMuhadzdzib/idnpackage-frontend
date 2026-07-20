@@ -11,7 +11,7 @@ function App() {
 
   useEffect(() => {
     // Gunakan satu endpoint saja untuk mengetes
-    fetch('http://localhost:8080/packages')
+    fetch(`${import.meta.env.VITE_API_URL}/packages`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
