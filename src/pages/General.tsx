@@ -36,7 +36,12 @@ function General() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await fetch('http://localhost:8080/packages');
+                const token = localStorage.getItem('token');
+                const response = await fetch('https://idnpackage-backend-production.up.railway.app/packages', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 const responseData = await response.json();
                 const packages = Array.isArray(responseData)
                     ? responseData

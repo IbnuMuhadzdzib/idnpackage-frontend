@@ -376,7 +376,7 @@ function Operator() {
                 <table className="w-full text-sm text-left whitespace-nowrap">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-slate-700">
-                      {['Nama (Penerima)','Kamar','Ekspedisi','Jam Masuk','Status','Action'].map(h => (
+                      {['Nama (Penerima)','Kamar','Jam Masuk','Status','Action'].map(h => (
                         <th key={h} className="px-6 py-3.5 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">{h}</th>
                       ))}
                     </tr>
@@ -418,7 +418,6 @@ function Operator() {
                               {row.studentId?.name || 'Tidak diketahui'}
                             </td>
                             <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{row.roomId?.name || '-'}</td>
-                            <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{row.ekspedisi || 'JTE'}</td>
                             <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{formatTime(row.createdAt)}</td>
                             <td className="px-6 py-4">
                               <span className={`px-3.5 py-1.5 rounded-full font-medium text-xs ${badge.color}`}>

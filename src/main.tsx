@@ -30,7 +30,7 @@ const router = createBrowserRouter ([
   {
     path: '/general',
     element: (
-      <ProtectedRoute allowedRoles={['student', 'teacher']}>
+      <ProtectedRoute>
         <General />
       </ProtectedRoute>
     ),

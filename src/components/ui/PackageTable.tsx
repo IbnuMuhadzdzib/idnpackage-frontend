@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PackageDetailModal from './PackageDetailModal';
 
 // --- 1. DEFINISI TYPE & INTERFACE (WAJIB UNTUK TYPESCRIPT) ---
 interface Student {
@@ -43,13 +44,21 @@ const PackageTable: React.FC<PackageTableProps> = ({
   const [tableData, setTableData] = useState<PackageItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Modal State
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
+
   // --- 3. FETCH API NESTJS ---
  useEffect(() => {
     const fetchPackages = async () => {
       try {
         setIsLoading(true);
-        // Pastikan portnya 8080 sesuai yang baru kamu ganti
-        const response = await fetch('http://localhost:8080/packages'); 
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://idnpackage-backend-production.up.railway.app/packages', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }); 
         const responseData = await response.json();
         
         // --- TAMBAHKAN PENGECEKAN INI ---
@@ -236,7 +245,13 @@ const PackageTable: React.FC<PackageTableProps> = ({
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <button className="bg-[#65B7FF] hover:bg-blue-400 text-gray-900 px-5 py-1.5 rounded-full font-medium text-[13px] transition-colors">
+                        <button 
+                          onClick={() => {
+                            setSelectedPackage(row);
+                            setIsDetailModalOpen(true);
+                          }}
+                          className="bg-[#65B7FF] hover:bg-blue-400 text-gray-900 px-5 py-1.5 rounded-full font-medium text-[13px] transition-colors"
+                        >
                           Cek Paket
                         </button>
                       </td>
@@ -309,6 +324,15 @@ const PackageTable: React.FC<PackageTableProps> = ({
           </div>
         </div>
       )}
+      {/* --- Package Detail Modal --- */}
+      <PackageDetailModal 
+        isOpen={isDetailModalOpen} 
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedPackage(null);
+        }} 
+        packageData={selectedPackage} 
+      />
     </div>
 
     </>

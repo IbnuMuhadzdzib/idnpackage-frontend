@@ -28,7 +28,12 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch('http://localhost:8080/rooms');
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://idnpackage-backend-production.up.railway.app/rooms', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const data = await response.json();
         if (Array.isArray(data)) {
           setRooms(data);
