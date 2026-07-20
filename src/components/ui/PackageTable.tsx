@@ -86,6 +86,14 @@ const PackageTable: React.FC<PackageTableProps> = ({
     };
 
     fetchPackages();
+    
+    // Add event listener for global package updates
+    const handlePackageUpdate = () => fetchPackages();
+    window.addEventListener('packageUpdated', handlePackageUpdate);
+
+    return () => {
+        window.removeEventListener('packageUpdated', handlePackageUpdate);
+    };
   }, []);
 
   // --- 4. HELPER FUNCTIONS DENGAN PARAMETER TYPING ---
@@ -334,6 +342,7 @@ const PackageTable: React.FC<PackageTableProps> = ({
         packageData={selectedPackage} 
         onStatusChange={(updatedPkg) => {
           setTableData(prev => prev.map(p => p.id === updatedPkg.id ? { ...p, location: updatedPkg.location } : p));
+          window.dispatchEvent(new Event('packageUpdated'));
         }}
       />
     </div>

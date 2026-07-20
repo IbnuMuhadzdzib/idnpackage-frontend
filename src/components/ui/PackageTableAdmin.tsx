@@ -148,7 +148,14 @@ const PackageTableAdmin: React.FC = () => {
   useEffect(() => {
     fetchPackages();
     const interval = setInterval(fetchPackages, 30000);
-    return () => clearInterval(interval);
+    
+    const handleUpdate = () => fetchPackages();
+    window.addEventListener('packageUpdated', handleUpdate);
+
+    return () => {
+        clearInterval(interval);
+        window.removeEventListener('packageUpdated', handleUpdate);
+    };
   }, [fetchPackages]);
 
   // --- DELETE HANDLER (BULK ONLY) ---
@@ -176,6 +183,7 @@ const PackageTableAdmin: React.FC = () => {
           if (failed.length > 0) console.error('Beberapa paket gagal dihapus', failed);
           setSelectedIds([]);
           fetchPackages();
+          window.dispatchEvent(new Event('packageUpdated'));
         } catch (error) {
           console.error('Gagal menghapus data paket:', error);
         } finally {
@@ -217,6 +225,7 @@ const PackageTableAdmin: React.FC = () => {
           }
           setSelectedIds([]);
           fetchPackages();
+          window.dispatchEvent(new Event('packageUpdated'));
         } catch (error) {
           console.error(`Gagal ${actionName} data paket:`, error);
         } finally {
@@ -495,6 +504,7 @@ const PackageTableAdmin: React.FC = () => {
         onSuccess={() => {
           setSelectedIds([]);
           fetchPackages();
+          window.dispatchEvent(new Event('packageUpdated'));
         }}
       />
 
@@ -506,6 +516,10 @@ const PackageTableAdmin: React.FC = () => {
           setSelectedPackageDetail(null);
         }}
         packageData={selectedPackageDetail}
+        onStatusChange={(updatedPkg) => {
+          setTableData(prev => prev.map(p => p.id === updatedPkg.id ? { ...p, location: updatedPkg.location } : p));
+          window.dispatchEvent(new Event('packageUpdated'));
+        }}
       />
       {/* Custom Confirm Modal */}
       <ConfirmModal

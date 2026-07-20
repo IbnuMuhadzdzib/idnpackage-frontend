@@ -88,7 +88,15 @@ function General() {
         fetchStats();
         // Refresh stats setiap 30 detik
         const interval = setInterval(fetchStats, 30000);
-        return () => clearInterval(interval);
+        
+        // Listen to global package updates
+        const handlePackageUpdate = () => fetchStats();
+        window.addEventListener('packageUpdated', handlePackageUpdate);
+        
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('packageUpdated', handlePackageUpdate);
+        };
     }, [selectedRoom]);
 
 const statsData = [

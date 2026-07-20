@@ -144,7 +144,14 @@ function Operator() {
   useEffect(() => {
     fetchPackages();
     const iv = setInterval(fetchPackages, 30000);
-    return () => clearInterval(iv);
+    
+    const handlePackageUpdate = () => fetchPackages();
+    window.addEventListener('packageUpdated', handlePackageUpdate);
+
+    return () => {
+        clearInterval(iv);
+        window.removeEventListener('packageUpdated', handlePackageUpdate);
+    };
   }, []);
 
   // --- ACTION HANDLERS ---
@@ -162,6 +169,7 @@ function Operator() {
         body: JSON.stringify({ location: newLocation }),
       });
       await fetchPackages();
+      window.dispatchEvent(new Event('packageUpdated'));
     } catch (e) {
       console.error('Gagal memindahkan paket:', e);
     } finally {
