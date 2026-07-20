@@ -59,7 +59,7 @@ const compressImage = (dataUrl: string, maxPx = 1024, quality = 0.78): Promise<s
 // -----------------------------------------------------------------------
 // Main component
 // -----------------------------------------------------------------------
-const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSuccess }) => {
+const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit, onClose, onSuccess }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,7 +91,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
       setIsLoadingRooms(true);
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('https://idnpackage-backend-production.up.railway.app/rooms', {
+        const res = await fetch('http://localhost:8080/rooms', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -112,14 +112,14 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
   useEffect(() => {
     if (isOpen) {
       if (packageToEdit) {
-        // Mode Edit: Isi form dengan data yang sudah ada
+        // Mode Edit
         setSelectedRoomId(packageToEdit.roomId ? String(packageToEdit.roomId.id) : '');
         setSelectedStudentId(packageToEdit.studentId ? String(packageToEdit.studentId.id) : '');
         setSelectedLocation(packageToEdit.location || 'security_post');
         setNotes(packageToEdit.notes || '');
         setPhotoPreview(packageToEdit.photoUrl || null);
       } else {
-        // Mode Tambah: Reset form jadi kosong bersih
+        // Mode Tambah
         setSelectedStudentId('');
         setSelectedRoomId('');
         setSelectedLocation('security_post');
@@ -242,9 +242,9 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
 
       // Tentukan URL & Method dinamis berdasarkan status mode form
       const url = packageToEdit
-        ? `https://idnpackage-backend-production.up.railway.app/packages/${packageToEdit.id}`
-        : 'https://idnpackage-backend-production.up.railway.app/packages';
-      const method = packageToEdit ? 'PUT' : 'POST';
+        ? `http://localhost:8080/packages/${packageToEdit.id}`
+        : 'http://localhost:8080/packages';
+      const method = packageToEdit ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
         method: method,
@@ -363,7 +363,9 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <h2 className="font-bold text-gray-800 dark:text-white text-base">Form Tambah Data Paket</h2>
+            <h2 className="font-bold text-gray-800 dark:text-white text-base">
+              {packageToEdit ? 'Edit Data Paket' : 'Form Tambah Data Paket'}
+            </h2>
           </div>
 
           {/* ---- Form Body ---- */}
@@ -497,7 +499,10 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
                   <select
                     required
                     value={selectedRoomId}
-                    onChange={(e) => setSelectedRoomId(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedRoomId(e.target.value);
+                      setSelectedStudentId(''); // Reset nama penerima jika kamar diubah
+                    }}
                     disabled={isLoadingRooms}
                     className="w-full px-3 py-2.5 pr-9 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 appearance-none transition-all cursor-pointer disabled:opacity-60"
                   >
@@ -583,7 +588,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Menambahkan...
+                  {packageToEdit ? 'Menyimpan...' : 'Menambahkan...'}
                 </>
               ) : submitSuccess ? (
                 <>
@@ -593,7 +598,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, onClose, onSu
                   Berhasil!
                 </>
               ) : (
-                'Tambah Paket'
+                packageToEdit ? 'Simpan Perubahan' : 'Tambah Paket'
               )}
             </button>
           </form>

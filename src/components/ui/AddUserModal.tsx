@@ -30,7 +30,8 @@ export const UserModal: React.FC<UserModalProps> = ({
         name: "",
         email: "",
         role: "operator",
-        room: "Saung 1",
+        room: "",
+        password: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -45,7 +46,8 @@ export const UserModal: React.FC<UserModalProps> = ({
                     name: userToEdit.name,
                     email: userToEdit.email,
                     role: userToEdit.role,
-                    room: userToEdit.room || "Saung 1",
+                    room: userToEdit.room || "",
+                    password: "", // Kosongkan password saat edit
                 });
             } else {
                 // Mode Tambah: Reset form ke default
@@ -53,7 +55,8 @@ export const UserModal: React.FC<UserModalProps> = ({
                     name: "",
                     email: "",
                     role: "operator",
-                    room: "Saung 1",
+                    room: "",
+                    password: "",
                 });
             }
             setSubmitSuccess(false);
@@ -81,10 +84,21 @@ export const UserModal: React.FC<UserModalProps> = ({
 
             // Tentukan URL & Method berdasarkan mode
             const url = isEditMode
-                ? `https://idnpackage-backend-production.up.railway.app/users/${userToEdit?.id}`
-                : "https://idnpackage-backend-production.up.railway.app/users";
+                ? `http://localhost:8080/users/${userToEdit?.id}`
+                : "http://localhost:8080/users";
 
-            const method = isEditMode ? "PUT" : "POST";
+            const method = isEditMode ? "PATCH" : "POST";
+
+            const payload: any = {
+                name: formData.name,
+                email: formData.email,
+                role: formData.role,
+            };
+
+            // Tambahkan password ke payload jika diisi (wajib saat tambah, opsional saat edit)
+            if (formData.password) {
+                payload.password = formData.password;
+            }
 
             const response = await fetch(url, {
                 method: method,
@@ -92,7 +106,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                     "Content-Type": "application/json",
                     ...(token && { Authorization: `Bearer ${token}` }),
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -173,43 +187,37 @@ export const UserModal: React.FC<UserModalProps> = ({
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                                Role <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                                <select
-                                    name="role"
-                                    value={formData.role}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2.5 pr-9 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 appearance-none transition-all cursor-pointer"
-                                >
-                                    <option value="operator">Satpam</option>
-                                    <option value="teacher">Ustadz</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                                <ChevronDown />
-                            </div>
-                        </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                            Password {isEditMode ? <span className="text-gray-400 font-normal">(opsional)</span> : <span className="text-red-500">*</span>}
+                        </label>
+                        <input
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            placeholder={isEditMode ? "Kosongkan jika tidak ingin mengubah" : "Masukkan password"}
+                            required={!isEditMode}
+                            className="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 transition-all"
+                        />
+                    </div>
 
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                                Kamar/Saung <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                                <select
-                                    name="room"
-                                    value={formData.room}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2.5 pr-9 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 appearance-none transition-all cursor-pointer"
-                                >
-                                    <option value="Saung 1">Saung 1</option>
-                                    <option value="Saung 2">Saung 2</option>
-                                    <option value="Saung 3">Saung 3</option>
-                                </select>
-                                <ChevronDown />
-                            </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                            Role <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <select
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2.5 pr-9 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 appearance-none transition-all cursor-pointer"
+                            >
+                                <option value="operator">Operator</option>
+                                <option value="teacher">Teacher</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <ChevronDown />
                         </div>
                     </div>
 

@@ -41,7 +41,7 @@ const PackageAreaChart: React.FC<PackageAreaChartProps> = ({ onCekData }) => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('https://idnpackage-backend-production.up.railway.app/packages', {
+        const res = await fetch('http://localhost:8080/packages', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const raw = await res.json();

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AddPackageModal from './AddPackageModal';
+import PackageDetailModal from './PackageDetailModal';
+import ConfirmModal from './ConfirmModal';
 
 import PackageIcon from '../../assets/package_icon.png';
 import RecievedIcon from '../../assets/hand_icon.png';
@@ -52,115 +54,6 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon, isActive = fa
   </div>
 );
 
-// --- COMPONENT: DETAIL PACKAGE MODAL (Sesuai Desain Gambar) ---
-interface DetailModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  data: PackageItem | null;
-}
-
-const DetailPackageModal: React.FC<DetailModalProps> = ({ isOpen, onClose, data }) => {
-  if (!isOpen || !data) return null;
-
-  const getLocationLabel = (loc: string) => {
-    switch (loc) {
-      case 'security_post': return 'Pos Satpam';
-      case 'dormitory_office': return 'Kantor Asrama';
-      case 'taken': return 'Diterima';
-      default: return loc || '-';
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all animate-fadeIn">
-      <div className="bg-[#F5F5F5] dark:bg-slate-900 w-full max-w-md p-6 rounded-[2.5rem] shadow-2xl relative max-h-[90vh] overflow-y-auto font-sans">
-
-        {/* Header / Back Action */}
-        <button
-          onClick={onClose}
-          className="flex items-center gap-2 text-gray-800 dark:text-gray-200 font-semibold text-lg mb-5 hover:opacity-70 transition-all focus:outline-none"
-        >
-          <svg className="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-          Detail Paket
-        </button>
-
-        {/* Package Image Box */}
-        <div className="relative w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden flex items-center justify-center group mb-5">
-          {data.photoUrl ? (
-            <img
-              src={data.photoUrl}
-              alt="Foto Paket"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            // Transparansi Catur Placeholder layaknya desain kalau ga ada gambar
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] dark:bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] flex items-center justify-center">
-              <span className="text-xs text-gray-400 font-medium tracking-wide">Tidak Ada Foto</span>
-            </div>
-          )}
-
-          {/* Blue Fullscreen Icon Bottom Right */}
-          <div className="absolute bottom-3 right-3 bg-[#143C9C] p-2 rounded-xl text-white shadow-md cursor-pointer hover:bg-blue-800 transition-all">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4h4M4 16v4h4m12-4v4h-4m4-12V4h-4" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Info Fields */}
-        <div className="space-y-4">
-          {/* Nama Penerima */}
-          <div>
-            <label className="block text-gray-400 dark:text-gray-500 text-xs font-semibold mb-1.5 tracking-wide">Nama Penerima</label>
-            <input
-              type="text"
-              readOnly
-              value={data.studentId?.name || 'Tidak diketahui'}
-              className="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-gray-800 dark:text-gray-200 font-medium focus:outline-none shadow-sm cursor-default"
-            />
-          </div>
-
-          {/* Kamar & Posisi (Grid 2 Kolom) */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-400 dark:text-gray-500 text-xs font-semibold mb-1.5 tracking-wide">Kamar/Saung</label>
-              <input
-                type="text"
-                readOnly
-                value={data.roomId?.name || '-'}
-                className="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-gray-800 dark:text-gray-200 font-medium focus:outline-none shadow-sm cursor-default"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-400 dark:text-gray-500 text-xs font-semibold mb-1.5 tracking-wide">Posisi</label>
-              <input
-                type="text"
-                readOnly
-                value={getLocationLabel(data.location)}
-                className="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-gray-800 dark:text-gray-200 font-medium focus:outline-none shadow-sm cursor-default"
-              />
-            </div>
-          </div>
-
-          {/* Catatan */}
-          <div>
-            <label className="block text-gray-400 dark:text-gray-500 text-xs font-semibold mb-1.5 tracking-wide">Catatan</label>
-            <textarea
-              readOnly
-              rows={3}
-              value={data.notes || 'Tidak ada catatan khusus.'}
-              className="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-gray-800 dark:text-gray-200 font-medium focus:outline-none shadow-sm cursor-default resize-none"
-            />
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-};
-
 
 // --- MAIN COMPONENT ---
 const PackageTableAdmin: React.FC = () => {
@@ -175,8 +68,47 @@ const PackageTableAdmin: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // Filter States
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [locationFilter, setLocationFilter] = useState<string>('all');
+  const [selectedDate] = useState<Date>(new Date());
+  const [locationFilter] = useState<string>('all');
+  
+  // Dropdown state for Pindahkan
+  const [isMoveDropdownOpen, setIsMoveDropdownOpen] = useState(false);
+
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText: string;
+    type: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    confirmText: 'Konfirmasi',
+    type: 'info',
+  });
+
+  const showConfirm = (opts: {
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    type?: 'danger' | 'warning' | 'info';
+  }) => {
+    setConfirmModal({
+      isOpen: true,
+      title: opts.title,
+      message: opts.message,
+      onConfirm: opts.onConfirm,
+      confirmText: opts.confirmText ?? 'Konfirmasi',
+      type: opts.type ?? 'info',
+    });
+  };
+
+  const closeConfirm = () => setConfirmModal((prev) => ({ ...prev, isOpen: false }));
 
   const [tableData, setTableData] = useState<PackageItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -190,7 +122,7 @@ const PackageTableAdmin: React.FC = () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('https://idnpackage-backend-production.up.railway.app/packages', {
+      const response = await fetch('http://localhost:8080/packages', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const responseData = await response.json();
@@ -220,33 +152,78 @@ const PackageTableAdmin: React.FC = () => {
   }, [fetchPackages]);
 
   // --- DELETE HANDLER (BULK ONLY) ---
-  const handleDeletePackages = async (idsToDelete: number[]) => {
+  const handleDeletePackages = (idsToDelete: number[]) => {
     if (idsToDelete.length === 0) return;
+    showConfirm({
+      title: 'Hapus Data Paket',
+      message: `Apakah Anda yakin ingin menghapus ${idsToDelete.length} data paket terpilih? Tindakan ini tidak dapat dibatalkan.`,
+      confirmText: `Hapus (${idsToDelete.length})`,
+      type: 'danger',
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          setIsLoading(true);
+          const token = localStorage.getItem('token');
+          const results = await Promise.all(
+            idsToDelete.map((id) =>
+              fetch(`http://localhost:8080/packages/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+              })
+            )
+          );
+          const failed = results.filter((r) => !r.ok);
+          if (failed.length > 0) console.error('Beberapa paket gagal dihapus', failed);
+          setSelectedIds([]);
+          fetchPackages();
+        } catch (error) {
+          console.error('Gagal menghapus data paket:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      },
+    });
+  };
 
-    const confirmMsg = `Apakah Anda yakin ingin menghapus ${idsToDelete.length} data paket terpilih?`;
-    if (!window.confirm(confirmMsg)) return;
-
-    try {
-      setIsLoading(true);
-      const token = localStorage.getItem('token');
-
-      await Promise.all(
-        idsToDelete.map((id) =>
-          fetch(`https://idnpackage-backend-production.up.railway.app/packages/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` },
-          })
-        )
-      );
-
-      setSelectedIds([]);
-      fetchPackages();
-    } catch (error) {
-      console.error('Gagal menghapus data paket:', error);
-      alert('Terjadi kesalahan saat menghapus paket.');
-    } finally {
-      setIsLoading(false);
-    }
+  // --- BULK ACTION HANDLER (Pindahkan & Diambil) ---
+  const handleBulkAction = (ids: number[], payload: { location: string; pickedUpDate?: string }, actionName: string, confirmOpts: { title: string; message: string; confirmText: string; type: 'danger' | 'warning' | 'info' }) => {
+    if (ids.length === 0) return;
+    showConfirm({
+      ...confirmOpts,
+      onConfirm: async () => {
+        closeConfirm();
+        setIsMoveDropdownOpen(false);
+        try {
+          setIsLoading(true);
+          const token = localStorage.getItem('token');
+          const results = await Promise.all(
+            ids.map((id) =>
+              fetch(`http://localhost:8080/packages/${id}`, {
+                method: 'PATCH',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+              })
+            )
+          );
+          // Log any failures with the actual error body
+          for (const r of results) {
+            if (!r.ok) {
+              const errBody = await r.json().catch(() => ({}));
+              console.error(`Gagal ${actionName} paket:`, errBody);
+            }
+          }
+          setSelectedIds([]);
+          fetchPackages();
+        } catch (error) {
+          console.error(`Gagal ${actionName} data paket:`, error);
+        } finally {
+          setIsLoading(false);
+        }
+      },
+    });
   };
 
   const getLocationBadge = (location: string) => {
@@ -309,9 +286,7 @@ const PackageTableAdmin: React.FC = () => {
     setIsDetailModalOpen(true);
   };
 
-  const toggleLocationFilter = (target: string) => {
-    setLocationFilter((prev) => (prev === target ? 'all' : target));
-  };
+
 
   const isAnySelected = selectedIds.length > 0;
 
@@ -335,27 +310,52 @@ const PackageTableAdmin: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 gap-3">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white tracking-wide">Data Paket</h2>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => toggleLocationFilter('dormitory_office')}
-              className={`px-5 py-1.5 text-sm font-medium border rounded-full transition-all duration-200
-                ${locationFilter === 'dormitory_office'
-                  ? 'bg-[#143C9C] text-white border-[#143C9C] dark:bg-blue-600 dark:border-blue-600'
-                  : 'text-[#143C9C] dark:text-blue-400 border-[#143C9C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700'
-                }`}
-            >
-              Pindahkan
-            </button>
+          <div className="flex items-center gap-2 relative">
+            {/* Pindahkan Dropdown */}
+            <div className="relative">
+              <button
+                disabled={!isAnySelected}
+                onClick={() => setIsMoveDropdownOpen(!isMoveDropdownOpen)}
+                className={`px-5 py-1.5 text-sm font-medium border rounded-full transition-all duration-200 flex items-center gap-1.5
+                  ${!isAnySelected 
+                    ? 'opacity-40 cursor-not-allowed text-[#143C9C] border-[#143C9C] dark:text-blue-400 dark:border-blue-400' 
+                    : 'text-[#143C9C] dark:text-blue-400 border-[#143C9C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 shadow-sm'
+                  }`}
+              >
+                Pindahkan {isAnySelected && `(${selectedIds.length})`}
+                <svg className={`w-4 h-4 transition-transform ${isMoveDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {isMoveDropdownOpen && isAnySelected && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 py-2 z-20">
+                  <button 
+                    onClick={() => handleBulkAction(selectedIds, { location: 'security_post' }, 'memindahkan', { title: 'Pindahkan ke Pos Satpam', message: `Pindahkan ${selectedIds.length} paket ke Pos Satpam?`, confirmText: 'Pindahkan', type: 'info' })}
+                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200"
+                  >
+                    Ke Pos Satpam
+                  </button>
+                  <button 
+                    onClick={() => handleBulkAction(selectedIds, { location: 'dormitory_office' }, 'memindahkan', { title: 'Pindahkan ke Kantor Asrama', message: `Pindahkan ${selectedIds.length} paket ke Kantor Asrama?`, confirmText: 'Pindahkan', type: 'info' })}
+                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200"
+                  >
+                    Ke Kantor Asrama
+                  </button>
+                </div>
+              )}
+            </div>
 
             <button
-              onClick={() => toggleLocationFilter('taken')}
+              disabled={!isAnySelected}
+              onClick={() => handleBulkAction(selectedIds, { location: 'taken', pickedUpDate: new Date().toISOString() }, 'mengambil', { title: 'Tandai Paket Diambil', message: `Tandai ${selectedIds.length} paket sebagai sudah diterima oleh siswa/siswi?`, confirmText: 'Diambil', type: 'warning' })}
               className={`px-5 py-1.5 text-sm font-medium border rounded-full transition-all duration-200
-                ${locationFilter === 'taken'
-                  ? 'bg-[#143C9C] text-white border-[#143C9C] dark:bg-blue-600 dark:border-blue-600'
-                  : 'text-[#143C9C] dark:text-blue-400 border-[#143C9C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700'
+                ${!isAnySelected 
+                  ? 'opacity-40 cursor-not-allowed text-[#143C9C] border-[#143C9C] dark:text-blue-400 dark:border-blue-400' 
+                  : 'text-[#143C9C] dark:text-blue-400 border-[#143C9C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 shadow-sm'
                 }`}
             >
-              Diambil
+              Diambil {isAnySelected && `(${selectedIds.length})`}
             </button>
 
             <button
@@ -498,14 +498,24 @@ const PackageTableAdmin: React.FC = () => {
         }}
       />
 
-      {/* Modal Detail Paket (Pop-up Baru Sesuai Desain Gambar) */}
-      <DetailPackageModal
+      {/* Modal Detail Paket */}
+      <PackageDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => {
           setIsDetailModalOpen(false);
           setSelectedPackageDetail(null);
         }}
-        data={selectedPackageDetail}
+        packageData={selectedPackageDetail}
+      />
+      {/* Custom Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={closeConfirm}
+        confirmText={confirmModal.confirmText}
+        type={confirmModal.type}
       />
     </div>
   );

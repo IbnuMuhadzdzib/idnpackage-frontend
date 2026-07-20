@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserModal } from '../ui/AddUserModal';
+import ConfirmModal from './ConfirmModal';
 
 import PosIcon from '../../assets/shield_icon.png';
 import PosIconDark from '../../assets/shield_icon_dark.png';
@@ -15,7 +16,7 @@ interface UserItem {
   room?: string;
 }
 
-type FilterTab = 'semua' | 'operator' | 'teacher';
+type FilterTab = 'semua' | 'admin' | 'operator' | 'teacher';
 
 interface StatsCardProps {
   title: string;
@@ -34,8 +35,8 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon }) => (
 
 const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
   const map: Record<string, { label: string; color: string }> = {
-    operator: { label: 'Satpam', color: 'bg-[#65B7FF] text-gray-900' },
-    teacher: { label: 'Ustadz', color: 'bg-[#FCE154] text-gray-900' },
+    operator: { label: 'Operator', color: 'bg-[#65B7FF] text-gray-900' },
+    teacher: { label: 'Teacher', color: 'bg-[#FCE154] text-gray-900' },
     admin: { label: 'Admin', color: 'bg-[#63DF8A] text-gray-900' },
   };
   const badge = map[role] ?? { label: role, color: 'bg-gray-200 text-gray-700' };
@@ -54,12 +55,28 @@ const UserDataAdmin: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<UserItem | null>(null);
 
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    confirmText: 'Konfirmasi',
+  });
+  const closeConfirm = () => setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+
   // --- FETCH USERS ---
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch('https://idnpackage-backend-production.up.railway.app/users', {
+      const res = await fetch('http://localhost:8080/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
@@ -80,10 +97,6 @@ const UserDataAdmin: React.FC = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleOpenAddModal = () => {
-    setUserToEdit(null);
-    setIsModalOpen(true);
-  };
 
   const handleOpenEditModal = (user: UserItem) => {
     setUserToEdit(user);
@@ -91,31 +104,34 @@ const UserDataAdmin: React.FC = () => {
   };
 
   // --- HANDLER DELETE USER DENGAN POP UP KONFIRMASI ---
-  const handleDeleteUser = async (id: number, name: string) => {
-    const confirmMsg = `Apakah Anda yakin ingin menghapus pengguna "${name}"?`;
-    if (!window.confirm(confirmMsg)) return;
-
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(`https://idnpackage-backend-production.up.railway.app/users/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.ok) {
-        fetchUsers(); // Refresh tabel setelah sukses
-      } else {
-        alert('Gagal menghapus pengguna.');
-      }
-    } catch (error) {
-      console.error('Gagal menghapus pengguna:', error);
-      alert('Terjadi kesalahan saat menghapus pengguna.');
-    } finally {
-      setLoading(false);
-    }
+  const handleDeleteUser = (id: number, name: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Hapus Pengguna',
+      message: `Apakah Anda yakin ingin menghapus pengguna "${name}"? Tindakan ini tidak dapat dibatalkan.`,
+      confirmText: 'Hapus',
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          setLoading(true);
+          const token = localStorage.getItem('token');
+          const res = await fetch(`http://localhost:8080/users/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            fetchUsers();
+          }
+        } catch (error) {
+          console.error('Gagal menghapus pengguna:', error);
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
+  const totalAdmin = users.filter(u => u.role === 'admin').length;
   const totalOperator = users.filter(u => u.role === 'operator').length;
   const totalTeacher = users.filter(u => u.role === 'teacher').length;
 
@@ -125,16 +141,27 @@ const UserDataAdmin: React.FC = () => {
 
   const tabs: { key: FilterTab; label: string }[] = [
     { key: 'semua', label: 'Semua' },
-    { key: 'operator', label: 'Satpam' },
-    { key: 'teacher', label: 'Ustadz' },
+    { key: 'admin', label: 'Admin' },
+    { key: 'operator', label: 'Operator' },
+    { key: 'teacher', label: 'Teacher' },
   ];
 
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <StatsCard
-          title="Total Satpam"
+          title="Total Admin"
+          count={totalAdmin}
+          icon={
+            <>
+              <img src={OfficeIcon} alt="" className="w-5 h-5 object-contain dark:hidden" />
+              <img src={OfficeIconDark} alt="" className="w-5 h-5 object-contain hidden dark:block" />
+            </>
+          }
+        />
+        <StatsCard
+          title="Total Operator"
           count={totalOperator}
           icon={
             <>
@@ -144,7 +171,7 @@ const UserDataAdmin: React.FC = () => {
           }
         />
         <StatsCard
-          title="Total Ustadz"
+          title="Total Teacher"
           count={totalTeacher}
           icon={
             <>
@@ -271,6 +298,16 @@ const UserDataAdmin: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         userToEdit={userToEdit}
         onSuccess={fetchUsers}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={closeConfirm}
+        confirmText={confirmModal.confirmText}
+        type="danger"
       />
     </div>
   );

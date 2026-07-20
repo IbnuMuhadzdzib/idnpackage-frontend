@@ -74,7 +74,7 @@ const PackageTableOperator: React.FC = () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('https://idnpackage-backend-production.up.railway.app/packages', {
+      const response = await fetch('http://localhost:8080/packages', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

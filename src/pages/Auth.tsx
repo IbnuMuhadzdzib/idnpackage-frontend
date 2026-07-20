@@ -39,7 +39,7 @@ function Auth() {
         try {
             const payload = { email, password };
 
-            const response = await fetch('https://idnpackage-backend-production.up.railway.app/auth-v2/login', {
+            const response = await fetch('http://localhost:8080/auth-v2/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import SidebarOperator from '../components/layout/SidebarOperator';
 import NavbarOperatorNew from '../components/layout/NavbarOperatorNew';
 import AddPackageModal from '../components/ui/AddPackageModal';
+import PackageDetailModal from '../components/ui/PackageDetailModal';
 import PackageTableAdmin from '../components/ui/PackageTableAdmin';
 import PackageAreaChart from '../components/ui/PackageAreaChart';
 import UserDataAdmin from '../components/ui/UserDataAdmin';
@@ -17,6 +18,7 @@ import RecievedIconDark from '../assets/hand_icon_dark.png';
 import OfficeIconDark from '../assets/building_icon_dark.png';
 import PosIconDark from '../assets/shield_icon_dark.png';
 import { UserModal } from '../components/ui/AddUserModal';
+import { BulkImportModal } from '../components/ui/BulkImportModal';
 
 // --- TYPE DEFINITIONS ---
 interface Student { id: number; name: string; }
@@ -91,6 +93,9 @@ function Operator() {
 
   // --- Modal State ---
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
   // Tambahkan baris di bawah ini untuk trigger refresh user:
   const [userRefreshKey, setUserRefreshKey] = useState(0);
 
@@ -114,7 +119,7 @@ function Operator() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch('https://idnpackage-backend-production.up.railway.app/packages', {
+      const res = await fetch('http://localhost:8080/packages', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -147,7 +152,7 @@ function Operator() {
     setActionLoading({ id: pkg.id, type: 'pindah' });
     try {
       const token = localStorage.getItem('token');
-      await fetch(`https://idnpackage-backend-production.up.railway.app/packages/${pkg.id}`, {
+      await fetch(`http://localhost:8080/packages/${pkg.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +172,7 @@ function Operator() {
     setActionLoading({ id: pkg.id, type: 'ambil' });
     try {
       const token = localStorage.getItem('token');
-      await fetch(`https://idnpackage-backend-production.up.railway.app/packages/${pkg.id}`, {
+      await fetch(`http://localhost:8080/packages/${pkg.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -283,7 +288,7 @@ function Operator() {
 
         {/* Navbar */}
         <header>
-          <NavbarOperatorNew operatorName={userName} />
+          <NavbarOperatorNew operatorName={userName} operatorRole={userRole} onLogout={handleLogout} />
         </header>
 
         {/* Page Content */}
@@ -293,25 +298,39 @@ function Operator() {
           <section className="flex items-center justify-between">
             <div>
               <h1 className="text-gray-900 dark:text-white font-bold text-2xl">
-                Assalamu'alaikum, {userRole === 'admin' ? 'Admin!' : `Pak ${userName}!`}
+                Assalamu'alaikum, {userName}!
               </h1>
               <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
                 Antum yang sedang bertugas dalam menerima paket.
               </p>
             </div>
 
-            {/* Tambah Paket button — shown on dashboard/packages tabs */}
+            {/* Tambah Paket & Import Siswa buttons */}
             {activeTab !== 'users' && (
-              <button
-                onClick={() => setIsAddModalOpen(true)}
-                id="btn-tambah-paket"
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#143C9C] hover:bg-blue-800 active:bg-blue-900 text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
-                </svg>
-                Tambah {userRole === 'admin' && activeTab === 'dashboard' ? 'Data' : 'Paket'}
-              </button>
+              <div className="flex items-center gap-3">
+                {userRole === 'admin' && (
+                  <button
+                    onClick={() => setIsBulkImportOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Import Data Siswa
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => setIsAddModalOpen(true)}
+                  id="btn-tambah-paket"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#143C9C] hover:bg-blue-800 active:bg-blue-900 text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Tambah {userRole === 'admin' && activeTab === 'dashboard' ? 'Data' : 'Paket'}
+                </button>
+              </div>
             )}
 
             {/* Tambah User button — shown on users tab for admin */}
@@ -335,7 +354,7 @@ function Operator() {
               {/* Stats Admin Dashboard */}
               <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <StatsCard title="Total Paket" count={stats.total} icon={<><img src={PackageIcon} className="w-5 h-5 dark:hidden" /><img src={PackageIconDark} className="w-5 h-5 hidden dark:block" /></>} isActive={true} />
-                <StatsCard title="Paket Selesai/Diterima" count={stats.taken} icon={<><img src={RecievedIcon} className="w-5 h-5 dark:hidden" /><img src={RecievedIconDark} className="w-5 h-5 hidden dark:block" /></>} />
+                <StatsCard title="Paket Diterima" count={stats.taken} icon={<><img src={RecievedIcon} className="w-5 h-5 dark:hidden" /><img src={RecievedIconDark} className="w-5 h-5 hidden dark:block" /></>} />
                 <StatsCard title="Paket di Kantor" count={stats.dormitory_office} icon={<><img src={OfficeIcon} className="w-5 h-5 dark:hidden" /><img src={OfficeIconDark} className="w-5 h-5 hidden dark:block" /></>} />
               </section>
 
@@ -387,7 +406,7 @@ function Operator() {
                     <table className="w-full text-sm text-left whitespace-nowrap">
                       <thead>
                         <tr className="border-b border-gray-200 dark:border-slate-700">
-                          {['Nama (Penerima)', 'Kamar', 'Ekspedisi', 'Jam Masuk', 'Status', 'Action'].map(h => (
+                          {['Nama (Penerima)', 'Kamar', 'Jam Masuk', 'Status', 'Action'].map(h => (
                             <th key={h} className="px-6 py-3.5 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">{h}</th>
                           ))}
                         </tr>
@@ -429,7 +448,6 @@ function Operator() {
                                   {row.studentId?.name || 'Tidak diketahui'}
                                 </td>
                                 <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{row.roomId?.name || '-'}</td>
-                                <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{row.ekspedisi || 'JTE'}</td>
                                 <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{formatTime(row.createdAt)}</td>
                                 <td className="px-6 py-4">
                                   <span className={`px-3.5 py-1.5 rounded-full font-medium text-xs ${badge.color}`}>
@@ -438,6 +456,15 @@ function Operator() {
                                 </td>
                                 <td className="px-6 py-4">
                                   <div className="flex gap-2">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedPackage(row);
+                                        setIsDetailModalOpen(true);
+                                      }}
+                                      className="bg-[#143C9C] hover:bg-blue-800 text-white px-3.5 py-1.5 rounded-full font-medium text-xs transition-all flex items-center gap-1 hover:shadow-sm"
+                                    >
+                                      Cek
+                                    </button>
                                     <button
                                       onClick={() => handlePindahkan(row)}
                                       disabled={!!actionLoading || isTaken}
@@ -547,11 +574,27 @@ function Operator() {
         onSuccess={fetchPackages}
       />
 
+      {/* --- Package Detail Modal --- */}
+      <PackageDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedPackage(null);
+        }}
+        packageData={selectedPackage}
+      />
+
       {/* --- Add User Modal --- */}
       <UserModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchUser} // <- Tambahin baris ini!
+      />
+
+      {/* --- Bulk Import Modal --- */}
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
       />
 
       <style>{`
