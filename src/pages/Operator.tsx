@@ -8,6 +8,7 @@ import PackageDetailModal from '../components/ui/PackageDetailModal';
 import PackageTableAdmin from '../components/ui/PackageTableAdmin';
 import PackageAreaChart from '../components/ui/PackageAreaChart';
 import UserDataAdmin from '../components/ui/UserDataAdmin';
+import RoomDataAdmin from '../components/ui/RoomDataAdmin';
 
 import PackageIcon from '../assets/package_icon.png';
 import RecievedIcon from '../assets/hand_icon.png';
@@ -72,7 +73,7 @@ function Operator() {
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<'admin' | 'operator'>('operator');
   const [userName, setUserName] = useState<string>('Satpam');
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'packages' | 'users'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'packages' | 'users' | 'rooms'>('dashboard');
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -306,7 +307,7 @@ function Operator() {
             </div>
 
             {/* Tambah Paket & Import Siswa buttons */}
-            {activeTab !== 'users' && (
+            {activeTab !== 'users' && activeTab !== 'rooms' && (
               <div className="flex items-center gap-3">
                 {userRole === 'admin' && (
                   <button
@@ -366,6 +367,11 @@ function Operator() {
           {/* --- ADMIN USERS TAB --- */}
           {userRole === 'admin' && activeTab === 'users' && (
             <UserDataAdmin key={userRefreshKey} />
+          )}
+
+          {/* --- ADMIN ROOMS TAB --- */}
+          {userRole === 'admin' && activeTab === 'rooms' && (
+            <RoomDataAdmin />
           )}
 
           {/* --- PACKAGES TAB FOR ADMIN --- */}

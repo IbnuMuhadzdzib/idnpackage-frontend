@@ -5,8 +5,8 @@ import LogoDark from '../../assets/icon_white.png';
 
 interface SidebarOperatorProps {
   role?: 'admin' | 'operator';
-  activeTab?: 'dashboard' | 'packages' | 'users';
-  onTabChange?: (tab: 'dashboard' | 'packages' | 'users') => void;
+  activeTab?: 'dashboard' | 'packages' | 'users' | 'rooms';
+  onTabChange?: (tab: 'dashboard' | 'packages' | 'users' | 'rooms') => void;
   onLogout?: () => void;
 }
 
@@ -31,6 +31,7 @@ const SidebarOperator: React.FC<SidebarOperatorProps> = ({ role = 'operator', ac
         <div className="flex flex-col gap-4 w-full px-4">
           {/* Packages Tab */}
           <button
+            title="Manajemen Paket"
             onClick={() => onTabChange?.('packages')}
             className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center transition-all duration-200 ${
               activeTab === 'packages'
@@ -45,6 +46,7 @@ const SidebarOperator: React.FC<SidebarOperatorProps> = ({ role = 'operator', ac
           
           {/* Users Tab */}
           <button
+            title="Data Santri & Pengguna"
             onClick={() => onTabChange?.('users')}
             className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center transition-all duration-200 ${
               activeTab === 'users'
@@ -54,6 +56,21 @@ const SidebarOperator: React.FC<SidebarOperatorProps> = ({ role = 'operator', ac
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </button>
+
+          {/* Rooms Tab */}
+          <button
+            title="Data Kamar"
+            onClick={() => onTabChange?.('rooms')}
+            className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center transition-all duration-200 ${
+              activeTab === 'rooms'
+                ? 'bg-[#143C9C] text-white shadow-md'
+                : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-[#143C9C] dark:hover:text-blue-400'
+            }`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
           </button>
         </div>
