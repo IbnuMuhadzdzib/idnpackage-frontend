@@ -23,13 +23,28 @@ interface PackageItem {
   createdAt: string;
 }
 
+/**
+ * Properti untuk komponen PackageTable
+ */
 interface PackageTableProps {
+  /** Filter aktif saat ini (misal: 'Semua', 'Di Pos') */
   activeFilter?: string;
+  /** Fungsi callback untuk mengubah filter aktif */
   setActiveFilter?: (filter: string) => void;
+  /** Teks pencarian saat ini */
   searchQuery?: string;
+  /** Filter berdasarkan nama kamar (misal: 'Semua Kamar' atau 'Saung 6') */
   selectedRoom?: string;
 }
 
+/**
+ * Komponen tabel data paket untuk halaman General (Umum).
+ * Menampilkan daftar paket dengan kemampuan filter berdasarkan tanggal,
+ * kamar, status lokasi, dan pencarian nama.
+ *
+ * @param {PackageTableProps} props - Properti komponen
+ * @returns {JSX.Element} Komponen tabel paket
+ */
 const PackageTable: React.FC<PackageTableProps> = ({ 
   activeFilter = 'Semua',
   setActiveFilter = () => {},

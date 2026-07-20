@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 
+/**
+ * Komponen yang menampilkan jam dan tanggal secara real-time.
+ * Komponen ini memperbarui waktu setiap detik.
+ *
+ * @returns {JSX.Element} Komponen LiveDateTime
+ */
 const LiveDateTime = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
 

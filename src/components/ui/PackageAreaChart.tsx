@@ -1,15 +1,29 @@
 import React, { useEffect, useState, useRef } from 'react';
 
+/**
+ * Data statistik paket per bulan
+ */
 interface MonthData {
   month: string;
   value: number;
   isLatest?: boolean;
 }
 
+/**
+ * Properti untuk komponen PackageAreaChart
+ */
 interface PackageAreaChartProps {
+  /** Fungsi callback saat tombol 'Cek Data' ditekan */
   onCekData?: () => void;
 }
 
+/**
+ * Komponen grafik area (Area Chart) untuk menampilkan tren jumlah paket
+ * yang masuk dalam 6 bulan terakhir.
+ *
+ * @param {PackageAreaChartProps} props - Properti komponen
+ * @returns {JSX.Element} Komponen PackageAreaChart
+ */
 const PackageAreaChart: React.FC<PackageAreaChartProps> = ({ onCekData }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [animated, setAnimated] = useState(false);

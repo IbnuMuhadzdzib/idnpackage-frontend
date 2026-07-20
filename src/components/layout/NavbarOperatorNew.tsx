@@ -2,12 +2,25 @@ import React, { useState, useRef, useEffect } from 'react';
 import LiveDateTimeOperator from '../ui/LiveDateTimeOperator';
 import ThemeToggle from '../ui/ThemeToggle';
 
+/**
+ * Properti untuk komponen NavbarOperatorNew
+ */
 interface NavbarOperatorNewProps {
+  /** Nama operator yang sedang login */
   operatorName?: string;
+  /** Peran operator yang sedang login (admin/operator/teacher dll) */
   operatorRole?: string;
+  /** Fungsi callback yang dijalankan saat tombol logout diklik */
   onLogout?: () => void;
 }
 
+/**
+ * Komponen navigasi atas untuk halaman operator dan admin.
+ * Menampilkan waktu saat ini, profil pengguna dengan dropdown untuk logout.
+ *
+ * @param {NavbarOperatorNewProps} props - Properti komponen
+ * @returns {JSX.Element} Komponen NavbarOperatorNew
+ */
 const NavbarOperatorNew: React.FC<NavbarOperatorNewProps> = ({
   operatorName = 'Pengguna',
   operatorRole = 'operator',
@@ -27,6 +40,12 @@ const NavbarOperatorNew: React.FC<NavbarOperatorNewProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  /**
+   * Mengembalikan label peran pengguna dalam bahasa Indonesia yang lebih bersahabat.
+   * 
+   * @param {string} role - Kode peran (misal: 'admin', 'operator')
+   * @returns {string} Label peran (misal: 'Admin', 'Satpam')
+   */
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'admin': return 'Admin';

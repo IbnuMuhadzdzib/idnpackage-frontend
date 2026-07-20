@@ -6,13 +6,26 @@ interface RoomItem {
     floor: number;
 }
 
+/**
+ * Properti untuk komponen AddRoomModal
+ */
 interface AddRoomModalProps {
+    /** Menentukan apakah modal sedang terbuka */
     isOpen: boolean;
+    /** Fungsi untuk menutup modal */
     onClose: () => void;
+    /** Fungsi callback jika penyimpanan data berhasil */
     onSuccess?: () => void;
+    /** Data kamar yang akan diedit, atau null jika menambah kamar baru */
     roomToEdit?: RoomItem | null;
 }
 
+/**
+ * Modal untuk menambah atau mengedit data kamar/saung.
+ * 
+ * @param {AddRoomModalProps} props - Properti komponen
+ * @returns {JSX.Element | null} Komponen modal
+ */
 export const AddRoomModal: React.FC<AddRoomModalProps> = ({ isOpen, onClose, onSuccess, roomToEdit }) => {
     const isEditMode = !!roomToEdit;
 

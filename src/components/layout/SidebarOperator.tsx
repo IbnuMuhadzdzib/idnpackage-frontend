@@ -3,13 +3,27 @@ import React from 'react';
 import LogoLight from '../../assets/icon.png';
 import LogoDark from '../../assets/icon_white.png';
 
+/**
+ * Properti untuk komponen SidebarOperator
+ */
 interface SidebarOperatorProps {
+  /** Peran pengguna (menentukan tab yang ditampilkan) */
   role?: 'admin' | 'operator';
+  /** Tab yang saat ini sedang aktif */
   activeTab?: 'dashboard' | 'packages' | 'users' | 'rooms';
+  /** Fungsi callback untuk menangani perubahan tab */
   onTabChange?: (tab: 'dashboard' | 'packages' | 'users' | 'rooms') => void;
+  /** Fungsi callback untuk logout */
   onLogout?: () => void;
 }
 
+/**
+ * Komponen Sidebar untuk halaman operator/admin.
+ * Berisi tombol navigasi antar menu (dashboard, packages, users, rooms).
+ * 
+ * @param {SidebarOperatorProps} props - Properti komponen
+ * @returns {JSX.Element} Sidebar
+ */
 const SidebarOperator: React.FC<SidebarOperatorProps> = ({ role = 'operator', activeTab = 'dashboard', onTabChange, onLogout }) => {
   return (
     <aside className="fixed left-0 top-0 h-screen w-[88px] bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-800 flex flex-col items-center py-6 z-30 shadow-sm transition-colors duration-300">

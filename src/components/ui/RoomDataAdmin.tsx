@@ -11,9 +11,15 @@ interface RoomItem {
     floor: number;
 }
 
+/**
+ * Properti untuk komponen StatsCard
+ */
 interface StatsCardProps {
+    /** Judul statistik */
     title: string;
+    /** Nilai/Jumlah statistik */
     count: number;
+    /** Ikon statistik */
     icon: React.ReactNode;
 }
 const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon }) => (
@@ -26,6 +32,12 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon }) => (
     </div>
 );
 
+/**
+ * Komponen tabel manajemen data kamar untuk peran Admin.
+ * Memungkinkan untuk menambah, mengedit, dan menghapus data kamar.
+ * 
+ * @returns {JSX.Element} Komponen tabel kamar
+ */
 const RoomDataAdmin: React.FC = () => {
     const [rooms, setRooms] = useState<RoomItem[]>([]);
     const [isLoading, setLoading] = useState(true);

@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/ui/ThemeToggle';
 
+/**
+ * Komponen Halaman Autentikasi.
+ * Menangani login pengguna, validasi, dan pengalihan ke halaman yang sesuai berdasarkan peran (admin/operator vs umum).
+ *
+ * @returns {JSX.Element} Halaman login
+ */
 function Auth() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -15,6 +21,13 @@ function Auth() {
         document.title = "Login - IDN Paketku";
     }, []);
 
+    /**
+     * Menangani proses submit form login.
+     * Melakukan validasi email/password, mengirim request login ke API,
+     * dan menyimpan token/user data di local storage.
+     *
+     * @param {React.FormEvent} e - Event submit dari form
+     */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 

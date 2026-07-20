@@ -5,6 +5,12 @@ import ThemeToggle from '../ui/ThemeToggle';
 import LogoLight from '../../assets/icon.png'
 import LogoDark from '../../assets/icon_white.png'
 
+/**
+ * Komponen navigasi atas lama (Navbar) untuk panel operator.
+ * 
+ * @deprecated Gunakan NavbarOperatorNew sebagai gantinya.
+ * @returns {JSX.Element} Komponen NavbarOperator
+ */
 const NavbarOperator = () => {
   return (
     <nav className="flex items-center justify-between px-8 py-4 bg-white dark:bg-slate-900 font-jakarta border-b border-gray-100 dark:border-slate-800 shadow-sm transition-colors duration-300">

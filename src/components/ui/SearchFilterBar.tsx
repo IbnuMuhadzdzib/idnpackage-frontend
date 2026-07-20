@@ -5,15 +5,31 @@ interface Room {
   name: string;
 }
 
+/**
+ * Properti untuk komponen SearchFilterBar
+ */
 interface SearchFilterBarProps {
+  /** Filter aktif saat ini (kategori) */
   activeFilter: string;
+  /** Fungsi callback untuk mengubah filter aktif */
   setActiveFilter: (filter: string) => void;
+  /** String pencarian */
   searchQuery?: string;
+  /** Fungsi callback untuk mengubah string pencarian */
   setSearchQuery?: (query: string) => void;
+  /** Filter kamar yang dipilih */
   selectedRoom?: string;
+  /** Fungsi callback untuk mengubah filter kamar */
   setSelectedRoom?: (room: string) => void;
 }
 
+/**
+ * Komponen bar pencarian dan filter untuk paket.
+ * Memungkinkan pencarian berdasarkan nama dan pemfilteran berdasarkan kamar.
+ *
+ * @param {SearchFilterBarProps} props - Properti komponen
+ * @returns {JSX.Element} Komponen SearchFilterBar
+ */
 const SearchFilterBar: React.FC<SearchFilterBarProps> = ({ 
   activeFilter: _activeFilter, 
   setActiveFilter: _setActiveFilter,

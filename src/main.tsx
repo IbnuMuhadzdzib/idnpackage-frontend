@@ -10,6 +10,10 @@ import Auth from './pages/Auth.tsx'
 
 import ProtectedRoute from './components/layout/ProtectedRoute.tsx'
 
+/**
+ * Router utama untuk aplikasi.
+ * Menangani rute yang dilindungi dan publik, serta pengalihan default.
+ */
 const router = createBrowserRouter ([
   {
     path: '/',

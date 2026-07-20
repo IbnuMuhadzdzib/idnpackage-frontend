@@ -1,11 +1,25 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
+/**
+ * Properti untuk komponen ProtectedRoute
+ */
 interface ProtectedRouteProps {
+  /** Komponen anak yang akan dirender jika pengguna berhak mengaksesnya */
   children: React.ReactNode;
+  /** Daftar peran pengguna yang diperbolehkan untuk mengakses rute ini */
   allowedRoles?: string[];
 }
 
+/**
+ * Komponen untuk membungkus rute yang membutuhkan autentikasi.
+ * Jika pengguna belum login, akan diarahkan ke halaman login.
+ * Jika peran pengguna tidak sesuai dengan allowedRoles, akan diarahkan
+ * ke halaman yang sesuai dengan perannya.
+ * 
+ * @param {ProtectedRouteProps} props - Properti komponen
+ * @returns {JSX.Element} Komponen anak atau Navigate untuk redirect
+ */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');

@@ -1,6 +1,12 @@
 import './App.css'
 import { useState, useEffect } from 'react'
 
+/**
+ * Komponen root untuk tes koneksi ke backend (NestJS).
+ * Menampilkan pesan yang diambil dari endpoint `/packages`.
+ * 
+ * @returns {JSX.Element} Komponen utama App
+ */
 function App() {
 
       useEffect(() => {

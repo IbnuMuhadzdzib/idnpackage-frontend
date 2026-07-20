@@ -24,10 +24,17 @@ interface PackageItem {
   createdAt: string;
 }
 
+/**
+ * Properti untuk komponen AddPackageModal
+ */
 interface AddPackageModalProps {
+  /** Menentukan apakah modal sedang terbuka */
   isOpen: boolean;
-  packageToEdit?: PackageItem | null; // Tambahan prop untuk mode edit
+  /** Data paket yang akan diedit (jika dalam mode edit), atau null untuk tambah baru */
+  packageToEdit?: PackageItem | null;
+  /** Fungsi untuk menutup modal */
   onClose: () => void;
+  /** Fungsi callback jika operasi berhasil */
   onSuccess?: () => void;
 }
 
@@ -60,6 +67,13 @@ const compressImage = (dataUrl: string, maxPx = 1024, quality = 0.78): Promise<s
 // -----------------------------------------------------------------------
 // Main component
 // -----------------------------------------------------------------------
+/**
+ * Modal untuk menambah atau mengedit data paket.
+ * Mendukung pengambilan foto dari kamera secara langsung atau memilih dari galeri.
+ *
+ * @param {AddPackageModalProps} props - Properti komponen
+ * @returns {JSX.Element | null} Komponen modal
+ */
 const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit, onClose, onSuccess }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);

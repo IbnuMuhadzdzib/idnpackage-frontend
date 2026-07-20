@@ -15,6 +15,12 @@ import RecievedIconDark from '../assets/hand_icon_dark.png'
 import OfficeIconDark from '../assets/building_icon_dark.png'
 import PosIconDark from '../assets/shield_icon_dark.png'
 
+/**
+ * Halaman pencarian dan statistik paket secara umum.
+ * Menampilkan informasi jumlah paket berdasarkan kategori dan pencarian paket.
+ * 
+ * @returns {JSX.Element} Halaman General
+ */
 function General() {
 
     useEffect(() => {
@@ -25,6 +31,12 @@ function General() {
     const [searchQuery, setSearchQuery] = useState('');
 
     // Inisialisasi filter kamar dari data user yang sedang login
+    /**
+     * Mengambil data nama kamar default dari `localStorage`.
+     * Jika tidak ditemukan di item `user`, akan mencoba decode dari JWT `token`.
+     * 
+     * @returns {string} Nama kamar default pengguna, atau 'Semua Kamar'
+     */
     const getDefaultRoom = () => {
         try {
             const raw = localStorage.getItem('user');

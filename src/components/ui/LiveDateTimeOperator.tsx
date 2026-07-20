@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 
+/**
+ * Komponen yang menampilkan jam dan tanggal secara real-time khusus untuk operator.
+ * Memiliki ukuran yang lebih kecil dan gaya yang disesuaikan untuk diletakkan di Navbar.
+ *
+ * @returns {JSX.Element} Komponen LiveDateTimeOperator
+ */
 const LiveDateTimeOperator= () => {
   const [currentTime, setCurrentTime] = useState(new Date());
 

@@ -5,9 +5,19 @@ import LogoDark from '../../assets/icon_white.png'
 import ThemeToggle from '../ui/ThemeToggle'; // Sesuaikan path file kamu
 import { useNavigate } from 'react-router-dom';
 
+/**
+ * Komponen navigasi atas (Navbar) untuk halaman umum (General).
+ * Menampilkan logo, tombol pengubah tema (ThemeToggle), dan tombol logout.
+ * 
+ * @returns {JSX.Element} Komponen NavbarGeneral
+ */
 const Navbar = () => {
   const navigate = useNavigate();
 
+  /**
+   * Menghapus token dan data pengguna dari localStorage,
+   * lalu mengarahkan pengguna ke halaman login.
+   */
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');

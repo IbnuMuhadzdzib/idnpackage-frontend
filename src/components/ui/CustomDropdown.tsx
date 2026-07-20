@@ -1,18 +1,36 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+/**
+ * Opsi yang tersedia dalam CustomDropdown
+ */
 interface DropdownOption {
   value: string;
   label: string;
 }
 
+/**
+ * Properti untuk komponen CustomDropdown
+ */
 interface CustomDropdownProps {
+  /** Daftar opsi dropdown */
   options: DropdownOption[];
+  /** Nilai yang saat ini terpilih */
   value: string;
+  /** Fungsi callback ketika nilai berubah */
   onChange: (value: string) => void;
+  /** Teks placeholder jika tidak ada nilai yang terpilih */
   placeholder?: string;
+  /** Menentukan apakah dropdown dinonaktifkan */
   disabled?: boolean;
 }
 
+/**
+ * Komponen Dropdown Kustom dengan gaya UI yang disesuaikan.
+ * Mendukung dark mode dan pemilihan item tunggal.
+ *
+ * @param {CustomDropdownProps} props - Properti komponen
+ * @returns {JSX.Element} Komponen CustomDropdown
+ */
 export const CustomDropdown: React.FC<CustomDropdownProps> = ({ options, value, onChange, placeholder = "Pilih...", disabled = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

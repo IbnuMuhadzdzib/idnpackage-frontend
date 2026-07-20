@@ -3,13 +3,29 @@ import * as XLSX from 'xlsx';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
+/**
+ * Properti untuk komponen BulkImportModal
+ */
 interface BulkImportModalProps {
+  /** Menentukan apakah modal terbuka */
   isOpen: boolean;
+  /** Fungsi untuk menutup modal */
   onClose: () => void;
+  /** Fungsi callback setelah impor berhasil */
   onSuccess?: () => void;
 }
 
 // ---- Reset All Button Component ----
+/**
+ * Komponen tombol untuk mereset seluruh data santri.
+ * Akan menampilkan konfirmasi sebelum melakukan penghapusan data.
+ * 
+ * @param {object} props - Properti komponen
+ * @param {function} props.onSuccess - Fungsi callback jika reset berhasil
+ * @param {function} props.onError - Fungsi callback jika terjadi error
+ * @param {function} props.onSuccessMessage - Fungsi callback untuk mengatur pesan sukses
+ * @returns {JSX.Element} Komponen tombol
+ */
 const ResetAllButton: React.FC<{ 
   onSuccess?: () => void; 
   onError: (msg: string) => void;
@@ -75,6 +91,13 @@ const ResetAllButton: React.FC<{
   );
 };
 
+/**
+ * Modal untuk mengimpor data santri secara massal (bulk) dari file Excel/CSV.
+ * Juga mendukung pengunduhan template Excel.
+ * 
+ * @param {BulkImportModalProps} props - Properti komponen
+ * @returns {JSX.Element | null} Komponen modal
+ */
 export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [dataPreview, setDataPreview] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);

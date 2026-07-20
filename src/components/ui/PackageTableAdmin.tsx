@@ -26,10 +26,17 @@ interface PackageItem {
   createdAt: string;
 }
 
+/**
+ * Properti untuk komponen StatsCard
+ */
 interface StatsCardProps {
+  /** Judul statistik */
   title: string;
+  /** Nilai statistik */
   count: number;
+  /** Ikon yang ditampilkan */
   icon: React.ReactNode;
+  /** Apakah kartu ini sedang aktif/disorot */
   isActive?: boolean;
 }
 
@@ -56,9 +63,26 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon, isActive = fa
 
 
 // --- MAIN COMPONENT ---
+/**
+ * Komponen utama tabel manajemen paket untuk peran Admin.
+ * Mendukung filter tanggal, fitur aksi massal (hapus, pindahkan, ambil),
+ * serta modal edit dan detail.
+ *
+ * @returns {JSX.Element} Komponen tabel admin
+ */
 const PackageTableAdmin: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [packageToEdit, setPackageToEdit] = useState<PackageItem | null>(null);
+
+  const getUserRole = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      return user.role;
+    } catch {
+      return '';
+    }
+  };
+  const isAdmin = getUserRole() === 'admin';
 
   // Detail Modal State
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -367,16 +391,18 @@ const PackageTableAdmin: React.FC = () => {
               Diambil {isAnySelected && `(${selectedIds.length})`}
             </button>
 
-            <button
-              disabled={!isAnySelected}
-              onClick={() => handleDeletePackages(selectedIds)}
-              className={`px-5 py-1.5 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-full hover:bg-red-700 transition-all flex items-center gap-2 ${!isAnySelected ? 'opacity-40 cursor-not-allowed' : 'opacity-100 shadow-sm'}`}
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Hapus {isAnySelected && `(${selectedIds.length})`}
-            </button>
+            {isAdmin && (
+              <button
+                disabled={!isAnySelected}
+                onClick={() => handleDeletePackages(selectedIds)}
+                className={`px-5 py-1.5 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-full hover:bg-red-700 transition-all flex items-center gap-2 ${!isAnySelected ? 'opacity-40 cursor-not-allowed' : 'opacity-100 shadow-sm'}`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Hapus {isAnySelected && `(${selectedIds.length})`}
+              </button>
+            )}
           </div>
         </div>
 
@@ -474,14 +500,16 @@ const PackageTableAdmin: React.FC = () => {
                             Cek
                           </button>
 
-                          <button
-                            title="Edit"
-                            onClick={() => handleOpenEdit(row)}
-                            className="bg-[#143C9C] hover:bg-blue-800 text-white px-4 py-1.5 rounded-full font-medium text-xs transition-all flex items-center gap-1.5 shadow-sm"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
-                            Edit
-                          </button>
+                          {isAdmin && (
+                            <button
+                              title="Edit"
+                              onClick={() => handleOpenEdit(row)}
+                              className="bg-[#143C9C] hover:bg-blue-800 text-white px-4 py-1.5 rounded-full font-medium text-xs transition-all flex items-center gap-1.5 shadow-sm"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                              Edit
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

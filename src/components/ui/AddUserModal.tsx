@@ -16,13 +16,26 @@ interface UserItem {
     room?: { id: number; name: string } | null;
 }
 
+/**
+ * Properti untuk komponen UserModal
+ */
 interface UserModalProps {
+    /** Menentukan apakah modal sedang terbuka */
     isOpen: boolean;
+    /** Fungsi untuk menutup modal */
     onClose: () => void;
+    /** Fungsi callback jika penyimpanan data berhasil */
     onSuccess?: () => void;
+    /** Data pengguna yang akan diedit, atau null untuk pengguna baru */
     userToEdit?: UserItem | null;
 }
 
+/**
+ * Modal untuk menambah atau mengedit data pengguna.
+ * 
+ * @param {UserModalProps} props - Properti komponen
+ * @returns {JSX.Element | null} Komponen modal
+ */
 export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSuccess, userToEdit }) => {
     const isEditMode = !!userToEdit;
 

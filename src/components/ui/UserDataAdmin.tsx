@@ -7,6 +7,9 @@ import PosIconDark from '../../assets/shield_icon_dark.png';
 import OfficeIcon from '../../assets/building_icon.png';
 import OfficeIconDark from '../../assets/building_icon_dark.png';
 
+/**
+ * Tipe data pengguna
+ */
 interface UserItem {
   id: number;
   name: string;
@@ -19,9 +22,15 @@ interface UserItem {
 
 type FilterTab = 'semua' | 'admin' | 'operator' | 'teacher';
 
+/**
+ * Properti untuk komponen StatsCard
+ */
 interface StatsCardProps {
+  /** Judul kartu statistik */
   title: string;
+  /** Nilai statistik */
   count: number;
+  /** Ikon yang ditampilkan */
   icon: React.ReactNode;
 }
 const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon }) => (
@@ -34,6 +43,13 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon }) => (
   </div>
 );
 
+/**
+ * Komponen untuk menampilkan badge role pengguna.
+ *
+ * @param {object} props - Properti komponen
+ * @param {string} props.role - Peran pengguna (misal: 'operator', 'teacher', 'admin')
+ * @returns {JSX.Element} Badge dengan warna yang sesuai peran
+ */
 const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
   const map: Record<string, { label: string; color: string }> = {
     operator: { label: 'Operator', color: 'bg-[#65B7FF] text-gray-900' },
@@ -48,6 +64,13 @@ const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
   );
 };
 
+/**
+ * Komponen utama manajemen data pengguna untuk peran Admin.
+ * Menampilkan statistik jumlah pengguna berdasarkan peran dan tabel daftar pengguna.
+ * Mendukung filter berdasarkan peran, serta fitur edit dan hapus pengguna.
+ *
+ * @returns {JSX.Element} Komponen manajemen pengguna
+ */
 const UserDataAdmin: React.FC = () => {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [isLoading, setLoading] = useState(true);

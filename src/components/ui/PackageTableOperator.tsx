@@ -25,10 +25,17 @@ interface PackageItem {
 }
 
 // --- MINI STATS CARD ---
+/**
+ * Properti untuk komponen StatsCard
+ */
 interface StatsCardProps {
+  /** Judul statistik */
   title: string;
+  /** Nilai/Jumlah statistik */
   count: number;
+  /** Ikon statistik */
   icon: React.ReactNode;
+  /** Status aktif untuk memberikan gaya tambahan */
   isActive?: boolean;
 }
 
@@ -54,6 +61,12 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon, isActive = fa
 );
 
 // --- MAIN COMPONENT ---
+/**
+ * Komponen utama tabel manajemen paket untuk peran Operator/Satpam.
+ * Mirip dengan Admin namun tanpa fitur hapus.
+ * 
+ * @returns {JSX.Element} Komponen tabel operator
+ */
 const PackageTableOperator: React.FC = () => {
   // Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

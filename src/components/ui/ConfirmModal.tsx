@@ -2,17 +2,34 @@ import React from 'react';
 
 export type ConfirmType = 'danger' | 'warning' | 'info';
 
+/**
+ * Properti untuk komponen ConfirmModal
+ */
 interface ConfirmModalProps {
+  /** Status modal terbuka */
   isOpen: boolean;
+  /** Judul modal */
   title: string;
+  /** Pesan konfirmasi yang ditampilkan */
   message: string;
+  /** Fungsi callback ketika dikonfirmasi */
   onConfirm: () => void;
+  /** Fungsi callback ketika dibatalkan */
   onCancel: () => void;
+  /** Teks untuk tombol konfirmasi (default: 'Konfirmasi') */
   confirmText?: string;
+  /** Teks untuk tombol batal (default: 'Batal') */
   cancelText?: string;
+  /** Tipe modal yang menentukan tampilan/warna icon (default: 'info') */
   type?: ConfirmType;
 }
 
+/**
+ * Modal dinamis untuk konfirmasi aksi (seperti menghapus atau menyimpan data).
+ *
+ * @param {ConfirmModalProps} props - Properti komponen
+ * @returns {JSX.Element | null} Komponen modal
+ */
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen,
   title,

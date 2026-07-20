@@ -11,6 +11,9 @@ interface Room {
   name: string;
 }
 
+/**
+ * Tipe data paket
+ */
 export interface PackageItem {
   id: number;
   studentId?: Student;
@@ -23,13 +26,27 @@ export interface PackageItem {
   createdAt: string;
 }
 
+/**
+ * Properti untuk komponen PackageDetailModal
+ */
 interface PackageDetailModalProps {
+  /** Menentukan apakah modal sedang terbuka */
   isOpen: boolean;
+  /** Fungsi untuk menutup modal */
   onClose: () => void;
+  /** Data paket yang ditampilkan detailnya */
   packageData: PackageItem | null;
+  /** Fungsi callback untuk menangani perubahan status paket */
   onStatusChange?: (updatedPkg: PackageItem) => void;
 }
 
+/**
+ * Modal untuk menampilkan detail dari sebuah paket, termasuk foto secara penuh (fullscreen).
+ * Juga menyediakan tombol untuk mengubah status paket (diambil vs belum) jika pengguna memiliki izin.
+ *
+ * @param {PackageDetailModalProps} props - Properti komponen
+ * @returns {JSX.Element | null} Komponen modal
+ */
 const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ isOpen, onClose, packageData, onStatusChange }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<string>(packageData?.location || '');
