@@ -361,12 +361,12 @@ const PackageTableAdmin: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                className="flex items-center gap-2 px-2 md:px-4 py-2 text-[#2D3A8C] dark:text-blue-300 border border-[#2D3A8C] dark:border-blue-400 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"
+                className="flex items-center gap-2 px-2 lg:px-4 py-2 text-[#2D3A8C] dark:text-blue-300 border border-[#2D3A8C] dark:border-blue-400 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span className="font-semibold text-xs md:text-sm hidden sm:block">{formatDate(selectedDate)}</span>
+                <span className="font-semibold text-xs lg:text-sm hidden lg:block">{formatDate(selectedDate)}</span>
               </button>
 
               {/* Popover Card Date Picker */}
@@ -427,7 +427,7 @@ const PackageTableAdmin: React.FC = () => {
               <button
                 disabled={!isAnySelected}
                 onClick={() => setIsMoveDropdownOpen(!isMoveDropdownOpen)}
-                className={`px-5 py-1.5 text-sm font-medium border rounded-full transition-all duration-200 flex items-center gap-1.5
+                className={`px-3 md:px-5 py-1.5 text-xs md:text-sm font-medium border rounded-full transition-all duration-200 flex items-center gap-1.5
                   ${!isAnySelected
                     ? 'opacity-40 cursor-not-allowed text-[#143C9C] border-[#143C9C] dark:text-blue-400 dark:border-blue-400'
                     : 'text-[#143C9C] dark:text-blue-400 border-[#143C9C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 shadow-sm'
@@ -460,7 +460,7 @@ const PackageTableAdmin: React.FC = () => {
             <button
               disabled={!isAnySelected}
               onClick={() => handleBulkAction(selectedIds, { location: 'taken', pickedUpDate: new Date().toISOString() }, 'mengambil', { title: 'Tandai Paket Diambil', message: `Tandai ${selectedIds.length} paket sebagai sudah diterima oleh siswa/siswi?`, confirmText: 'Diambil', type: 'warning' })}
-              className={`px-5 py-1.5 text-sm font-medium border rounded-full transition-all duration-200
+              className={`px-3 md:px-5 py-1.5 text-xs md:text-sm font-medium border rounded-full transition-all duration-200
                 ${!isAnySelected
                   ? 'opacity-40 cursor-not-allowed text-[#143C9C] border-[#143C9C] dark:text-blue-400 dark:border-blue-400'
                   : 'text-[#143C9C] dark:text-blue-400 border-[#143C9C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 shadow-sm'
@@ -473,12 +473,12 @@ const PackageTableAdmin: React.FC = () => {
               <button
                 disabled={!isAnySelected}
                 onClick={() => handleDeletePackages(selectedIds)}
-                className={`px-5 py-1.5 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-full hover:bg-red-700 transition-all flex items-center gap-2 ${!isAnySelected ? 'opacity-40 cursor-not-allowed' : 'opacity-100 shadow-sm'}`}
+                className={`px-2 md:px-5 py-2 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-full hover:bg-red-700 transition-all flex items-center gap-2 ${!isAnySelected ? 'opacity-40 cursor-not-allowed' : 'opacity-100 shadow-sm'}`}
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                Hapus {isAnySelected && `(${selectedIds.length})`}
+                <span className='hidden md:block'>Hapus</span> {isAnySelected && `(${selectedIds.length})`}
               </button>
             )}
           </div>
