@@ -79,7 +79,7 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
             value={searchQuery} // Ikat ke state
             onChange={(e) => setSearchQuery(e.target.value)} // Update state saat ngetik
             placeholder="Cari paket dengan nama antum disini" 
-            className="bg-transparent border-none outline-none w-full ml-3 text-[#143C9C] dark:text-white placeholder:text-[#889cc3] dark:placeholder:text-gray-400 font-medium"
+            className="bg-transparent border-none outline-none w-full ml-3 text-[#143C9C] dark:text-white placeholder:text-[#889cc3] dark:placeholder:text-gray-400 font-medium text-xs md:text-base"
           />
         </div>
 

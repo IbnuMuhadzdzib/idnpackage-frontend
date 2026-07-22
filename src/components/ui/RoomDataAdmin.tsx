@@ -26,7 +26,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon }) => (
     <div className="p-5 rounded-2xl border bg-[#143C9C] border-[#143C9C] flex flex-col justify-between h-full shadow-sm select-none">
         <div className="flex justify-between items-center w-full">
             <h3 className="font-semibold text-sm text-white">{title}</h3>
-            <div className="p-1.5 rounded-lg bg-white/20">{icon}</div>
+            <div className="p-1.5 rounded-lg bg-white/40">{icon}</div>
         </div>
         <div className="text-7xl font-bold mt-4 text-white">{count}</div>
     </div>
@@ -131,14 +131,14 @@ const RoomDataAdmin: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Action Bar */}
-            <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm">
+            <div className="flex justify-between items-center gap-2 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm">
                 <div>
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Manajemen Kamar</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Kelola data kamar/saung di pesantren</p>
+                    <h2 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">Manajemen Kamar</h2>
+                    <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Kelola data kamar/saung di pesantren</p>
                 </div>
                 <button
                     onClick={handleOpenAddModal}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-[#143C9C] hover:bg-blue-800 active:bg-blue-900 text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-[#143C9C] hover:bg-blue-800 active:bg-blue-900 text-white rounded-xl font-semibold text-xs md:text-sm whitespace-nowrap transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />

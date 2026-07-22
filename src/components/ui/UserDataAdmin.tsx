@@ -37,7 +37,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon }) => (
   <div className="p-5 rounded-2xl border bg-[#143C9C] border-[#143C9C] flex flex-col justify-between h-full shadow-sm select-none">
     <div className="flex justify-between items-center w-full">
       <h3 className="font-semibold text-sm text-white">{title}</h3>
-      <div className="p-1.5 rounded-lg bg-white/20">{icon}</div>
+      <div className="p-1.5 rounded-lg bg-white/40">{icon}</div>
     </div>
     <div className="text-7xl font-bold mt-4 text-white">{count}</div>
   </div>
@@ -215,7 +215,7 @@ const UserDataAdmin: React.FC = () => {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-auto md:overflow-hidden">
             {tabs.map(tab => (
               <button
                 key={tab.key}

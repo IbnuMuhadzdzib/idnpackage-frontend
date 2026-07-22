@@ -30,13 +30,9 @@ interface PackageItem {
  * Properti untuk komponen StatsCard
  */
 interface StatsCardProps {
-  /** Judul statistik */
   title: string;
-  /** Nilai statistik */
   count: number;
-  /** Ikon yang ditampilkan */
   icon: React.ReactNode;
-  /** Apakah kartu ini sedang aktif/disorot */
   isActive?: boolean;
 }
 
@@ -51,7 +47,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon, isActive = fa
       <h3 className={`font-semibold text-sm leading-tight ${isActive ? 'text-white' : 'text-[#143C9C] dark:text-blue-400'}`}>
         {title}
       </h3>
-      <div className={`p-1.5 rounded-lg flex-shrink-0 ${isActive ? 'bg-white/20' : 'bg-blue-50 dark:bg-slate-700'}`}>
+      <div className={`p-1.5 rounded-lg flex-shrink-0 ${isActive ? 'bg-white/30' : 'bg-blue-50 dark:bg-slate-700'}`}>
         {icon}
       </div>
     </div>
@@ -63,13 +59,6 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon, isActive = fa
 
 
 // --- MAIN COMPONENT ---
-/**
- * Komponen utama tabel manajemen paket untuk peran Admin.
- * Mendukung filter tanggal, fitur aksi massal (hapus, pindahkan, ambil),
- * serta modal edit dan detail.
- *
- * @returns {JSX.Element} Komponen tabel admin
- */
 const PackageTableAdmin: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [packageToEdit, setPackageToEdit] = useState<PackageItem | null>(null);
@@ -91,10 +80,11 @@ const PackageTableAdmin: React.FC = () => {
   // Checkbox Selection State
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  // Filter States
-  const [selectedDate] = useState<Date>(new Date());
+  // Filter States (DITAMBAHKAN SETTER & STATE POPPER TANGGAL)
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
   const [locationFilter] = useState<string>('all');
-  
+
   // Dropdown state for Pindahkan
   const [isMoveDropdownOpen, setIsMoveDropdownOpen] = useState(false);
 
@@ -110,7 +100,7 @@ const PackageTableAdmin: React.FC = () => {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
     confirmText: 'Konfirmasi',
     type: 'info',
   });
@@ -172,15 +162,41 @@ const PackageTableAdmin: React.FC = () => {
   useEffect(() => {
     fetchPackages();
     const interval = setInterval(fetchPackages, 30000);
-    
+
     const handleUpdate = () => fetchPackages();
     window.addEventListener('packageUpdated', handleUpdate);
 
     return () => {
-        clearInterval(interval);
-        window.removeEventListener('packageUpdated', handleUpdate);
+      clearInterval(interval);
+      window.removeEventListener('packageUpdated', handleUpdate);
     };
   }, [fetchPackages]);
+
+  // --- HELPER UNTUK DATE PICKER ---
+  const getFormattedYYYYMMDD = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.value) return;
+    const [y, m, d] = e.target.value.split('-').map(Number);
+    setSelectedDate(new Date(y, m - 1, d));
+  };
+
+  const handleSetToday = () => {
+    setSelectedDate(new Date());
+    setIsDatePickerOpen(false);
+  };
+
+  const handleSetYesterday = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    setSelectedDate(yesterday);
+    setIsDatePickerOpen(false);
+  };
 
   // --- DELETE HANDLER (BULK ONLY) ---
   const handleDeletePackages = (idsToDelete: number[]) => {
@@ -217,7 +233,7 @@ const PackageTableAdmin: React.FC = () => {
     });
   };
 
-  // --- BULK ACTION HANDLER (Pindahkan & Diambil) ---
+  // --- BULK ACTION HANDLER ---
   const handleBulkAction = (ids: number[], payload: { location: string; pickedUpDate?: string }, actionName: string, confirmOpts: { title: string; message: string; confirmText: string; type: 'danger' | 'warning' | 'info' }) => {
     if (ids.length === 0) return;
     showConfirm({
@@ -232,7 +248,7 @@ const PackageTableAdmin: React.FC = () => {
             ids.map((id) =>
               fetch(`${import.meta.env.VITE_API_URL}/packages/${id}`, {
                 method: 'PATCH',
-                headers: { 
+                headers: {
                   'Content-Type': 'application/json',
                   'Authorization': `Bearer ${token}`,
                 },
@@ -240,7 +256,6 @@ const PackageTableAdmin: React.FC = () => {
               })
             )
           );
-          // Log any failures with the actual error body
           for (const r of results) {
             if (!r.ok) {
               const errBody = await r.json().catch(() => ({}));
@@ -313,13 +328,10 @@ const PackageTableAdmin: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
-  // Trigger Ngebuka Detail Popup
   const handleOpenDetail = (pkg: PackageItem) => {
     setSelectedPackageDetail(pkg);
     setIsDetailModalOpen(true);
   };
-
-
 
   const isAnySelected = selectedIds.length > 0;
 
@@ -343,15 +355,81 @@ const PackageTableAdmin: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 gap-3">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white tracking-wide">Data Paket</h2>
 
-          <div className="flex items-center gap-2 relative">
+          <div className="flex flex-wrap items-center gap-2 relative">
+
+            {/* --- FITUR CEK PAKET FILTER TANGGAL (POPOVER) --- */}
+            <div className="relative">
+              <button
+                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                className="flex items-center gap-2 px-2 md:px-4 py-2 text-[#2D3A8C] dark:text-blue-300 border border-[#2D3A8C] dark:border-blue-400 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="font-semibold text-xs md:text-sm hidden sm:block">{formatDate(selectedDate)}</span>
+              </button>
+
+              {/* Popover Card Date Picker */}
+              {isDatePickerOpen && (
+                <>
+                  {/* Backdrop transparan buat nutup popover pas klik di luar */}
+                  <div
+                    className="fixed inset-0 z-20"
+                    onClick={() => setIsDatePickerOpen(false)}
+                  />
+
+                  <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 p-4 z-30 space-y-3 font-sans">
+                    <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-slate-700">
+                      <span className="text-xs font-bold text-gray-700 dark:text-gray-200">Pilih Tanggal</span>
+                      <button
+                        onClick={() => setIsDatePickerOpen(false)}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-white text-xs font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Input Date Native */}
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">
+                        Pilih Spesifik
+                      </label>
+                      <input
+                        type="date"
+                        value={getFormattedYYYYMMDD(selectedDate)}
+                        onChange={handleDateInputChange}
+                        className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#143C9C]"
+                      />
+                    </div>
+
+                    {/* Quick Preset Buttons */}
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <button
+                        onClick={handleSetToday}
+                        className="px-3 py-1.5 text-xs font-semibold bg-blue-50 dark:bg-slate-700 text-[#143C9C] dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-slate-600 transition-colors"
+                      >
+                        Hari Ini
+                      </button>
+                      <button
+                        onClick={handleSetYesterday}
+                        className="px-3 py-1.5 text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+                      >
+                        Kemarin
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Pindahkan Dropdown */}
             <div className="relative">
               <button
                 disabled={!isAnySelected}
                 onClick={() => setIsMoveDropdownOpen(!isMoveDropdownOpen)}
                 className={`px-5 py-1.5 text-sm font-medium border rounded-full transition-all duration-200 flex items-center gap-1.5
-                  ${!isAnySelected 
-                    ? 'opacity-40 cursor-not-allowed text-[#143C9C] border-[#143C9C] dark:text-blue-400 dark:border-blue-400' 
+                  ${!isAnySelected
+                    ? 'opacity-40 cursor-not-allowed text-[#143C9C] border-[#143C9C] dark:text-blue-400 dark:border-blue-400'
                     : 'text-[#143C9C] dark:text-blue-400 border-[#143C9C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 shadow-sm'
                   }`}
               >
@@ -360,16 +438,16 @@ const PackageTableAdmin: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              
+
               {isMoveDropdownOpen && isAnySelected && (
                 <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 py-2 z-20">
-                  <button 
+                  <button
                     onClick={() => handleBulkAction(selectedIds, { location: 'security_post' }, 'memindahkan', { title: 'Pindahkan ke Pos Satpam', message: `Pindahkan ${selectedIds.length} paket ke Pos Satpam?`, confirmText: 'Pindahkan', type: 'info' })}
                     className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200"
                   >
                     Ke Pos Satpam
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleBulkAction(selectedIds, { location: 'dormitory_office' }, 'memindahkan', { title: 'Pindahkan ke Kantor Asrama', message: `Pindahkan ${selectedIds.length} paket ke Kantor Asrama?`, confirmText: 'Pindahkan', type: 'info' })}
                     className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200"
                   >
@@ -383,8 +461,8 @@ const PackageTableAdmin: React.FC = () => {
               disabled={!isAnySelected}
               onClick={() => handleBulkAction(selectedIds, { location: 'taken', pickedUpDate: new Date().toISOString() }, 'mengambil', { title: 'Tandai Paket Diambil', message: `Tandai ${selectedIds.length} paket sebagai sudah diterima oleh siswa/siswi?`, confirmText: 'Diambil', type: 'warning' })}
               className={`px-5 py-1.5 text-sm font-medium border rounded-full transition-all duration-200
-                ${!isAnySelected 
-                  ? 'opacity-40 cursor-not-allowed text-[#143C9C] border-[#143C9C] dark:text-blue-400 dark:border-blue-400' 
+                ${!isAnySelected
+                  ? 'opacity-40 cursor-not-allowed text-[#143C9C] border-[#143C9C] dark:text-blue-400 dark:border-blue-400'
                   : 'text-[#143C9C] dark:text-blue-400 border-[#143C9C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 shadow-sm'
                 }`}
             >
@@ -490,7 +568,6 @@ const PackageTableAdmin: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                          {/* Tombol Cek Terintegrasi ke Pop-up Detail Desain Lu */}
                           <button
                             title="Cek detail"
                             onClick={() => handleOpenDetail(row)}
@@ -549,6 +626,7 @@ const PackageTableAdmin: React.FC = () => {
           window.dispatchEvent(new Event('packageUpdated'));
         }}
       />
+
       {/* Custom Confirm Modal */}
       <ConfirmModal
         isOpen={confirmModal.isOpen}
