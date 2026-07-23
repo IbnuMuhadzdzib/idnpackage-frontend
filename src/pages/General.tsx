@@ -168,8 +168,8 @@ function General() {
                 <Navbar />
             </header>
 
-            <main className='px-10 font-jakarta space-y-12 mt-20 pb-12'>
-                <section>
+            <main className='px-0 sm:px-10 font-jakarta space-y-12 mt-20 pb-12'>
+                <section className='px-4 sm:px-0'>
                     <div>
                         <h1 className='text-center text-[#143C9C] dark:text-blue-400 font-bold text-xl md:text-4xl'>
                             Selamat datang di Halaman <br /> Pencarian Paket Santri!
@@ -180,7 +180,7 @@ function General() {
                     </div>
                 </section>
 
-                <section>
+                <section className='px-4 sm:px-0'>
                     <SearchFilterBar
                         activeFilter={activeFilter}
                         setActiveFilter={setActiveFilter}
@@ -191,8 +191,8 @@ function General() {
                     />
                 </section>
 
-                <section className='border border-[#B7B7B7] dark:border-slate-700 rounded-lg p-4 space-y-4'>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <section className='sm:border border-[#B7B7B7] dark:border-slate-700 rounded-lg p-4 space-y-4'>
+                    <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 overflow-x-auto md:overflow-visible pb-3 md:pb-0 pt-1 snap-x snap-mandatory scrollbar-thin">
 
                         {/* 2. Looping data array menjadi komponen StatCard */}
                         {statsData.map((stat) => (

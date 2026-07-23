@@ -33,22 +33,20 @@ interface StatsCardProps {
   /** Ikon yang ditampilkan */
   icon: React.ReactNode;
 }
+
+// Status Cards
 const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon }) => (
-  <div className="p-5 rounded-2xl border bg-[#143C9C] border-[#143C9C] flex flex-col justify-between h-full shadow-sm select-none">
+  <div className="p-5 rounded-2xl border bg-[#143C9C] border-[#143C9C] flex flex-col justify-between h-full shadow-sm select-none min-w-full md:min-w-0 md:w-full shrink-0 md:shrink snap-start">
     <div className="flex justify-between items-center w-full">
       <h3 className="font-semibold text-sm text-white">{title}</h3>
       <div className="p-1.5 rounded-lg bg-white/40">{icon}</div>
     </div>
-    <div className="text-7xl font-bold mt-4 text-white">{count}</div>
+    <div className="text-6xl sm:text-7xl font-bold mt-4 text-white">{count}</div>
   </div>
 );
 
 /**
  * Komponen untuk menampilkan badge role pengguna.
- *
- * @param {object} props - Properti komponen
- * @param {string} props.role - Peran pengguna (misal: 'operator', 'teacher', 'admin')
- * @returns {JSX.Element} Badge dengan warna yang sesuai peran
  */
 const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
   const map: Record<string, { label: string; color: string }> = {
@@ -66,10 +64,6 @@ const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
 
 /**
  * Komponen utama manajemen data pengguna untuk peran Admin.
- * Menampilkan statistik jumlah pengguna berdasarkan peran dan tabel daftar pengguna.
- * Mendukung filter berdasarkan peran, serta fitur edit dan hapus pengguna.
- *
- * @returns {JSX.Element} Komponen manajemen pengguna
  */
 const UserDataAdmin: React.FC = () => {
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -90,7 +84,7 @@ const UserDataAdmin: React.FC = () => {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
     confirmText: 'Konfirmasi',
   });
   const closeConfirm = () => setConfirmModal((prev) => ({ ...prev, isOpen: false }));
@@ -120,7 +114,6 @@ const UserDataAdmin: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
-
 
   const handleOpenEditModal = (user: UserItem) => {
     setUserToEdit(user);
@@ -172,8 +165,8 @@ const UserDataAdmin: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {/* Stats Cards Section */}
+      <section className="flex md:grid md:grid-cols-3 gap-4 sm:gap-5 overflow-x-auto md:overflow-visible pb-3 md:pb-0 pt-1 snap-x snap-mandatory scrollbar-thin">
         <StatsCard
           title="Total Admin"
           count={totalAdmin}
@@ -284,7 +277,6 @@ const UserDataAdmin: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-
                         <button
                           title="Edit"
                           onClick={() => handleOpenEditModal(user)}
@@ -296,7 +288,6 @@ const UserDataAdmin: React.FC = () => {
                           Edit
                         </button>
 
-                        {/* BUTTON CEK SUDAH BERUBAH MENJADI HAPUS */}
                         <button
                           title="Hapus"
                           onClick={() => handleDeleteUser(user.id, user.name)}
