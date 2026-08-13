@@ -25,13 +25,13 @@ const Navbar = () => {
   };
 
   return (
-    <div className="navbar bg-base-100 dark:bg-slate-900 px-6 py-4 flex justify-between items-center rounded-2xl">
-        <div className='bg-[#F3F3F3] dark:bg-slate-800 border border-grey-100 dark:border-slate-700 px-4 py-2 rounded-lg'>
-            <div className='text-[#143C9C] dark:text-blue-400 font-bold text-3xl'>
+    <div className="navbar bg-base-100 dark:bg-slate-900 px-4 py-4 flex justify-between items-center rounded-2xl">
+        <div className='bg-[#F3F3F3] dark:bg-slate-800 border border-grey-100 dark:border-slate-700 px-2 md:px-4 py-2 rounded-lg'>
+            <div className='text-[#143C9C] dark:text-blue-400 font-bold text-lg md:text-3xl'>
                 <h1 className='flex justify-center items-center gap-2 h-fit'>
                     <span>
-                      <img src={LogoDark} alt="Logo IDN Paketku" className="size-10 hidden dark:block" />
-                      <img src={LogoLight} alt="Logo IDN Paketku" className="size-10 dark:hidden" />
+                      <img src={LogoDark} alt="Logo IDN Paketku" className="size-7 md:size-10 hidden dark:block" />
+                      <img src={LogoLight} alt="Logo IDN Paketku" className="size-7 md:size-10 dark:hidden" />
                     </span>
                     IDN Paketku
                 </h1>
@@ -47,7 +47,7 @@ const Navbar = () => {
         {/* Tombol Logout */}
         <button 
           onClick={handleLogout}
-          className="btn bg-red-600 hover:bg-red-700 text-white border-none rounded-xl px-6 py-6 min-h-0 h-10 normal-case"
+          className="btn bg-red-600 hover:bg-red-700 text-white border-none rounded-xl px-4 py-4 md:px-6 md:py-6 min-h-0 h-10 normal-case"
         >
           Logout
         </button>

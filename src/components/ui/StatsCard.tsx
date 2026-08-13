@@ -10,7 +10,7 @@ interface StatsCardProps {
 const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon, isActive = false }) => {
     return(
         <div 
-      className={`p-6 rounded-xl border flex flex-col justify-between h-fit transition-all shadow-sm
+      className={`p-5 rounded-2xl border flex flex-col justify-between h-full shadow-sm select-none min-w-full md:min-w-0 md:w-full shrink-0 md:shrink snap-start
         ${isActive 
           ? 'bg-[#1a4198] text-white border-[#1a4198] dark:bg-blue-600 dark:border-blue-600' // Style aktif (Biru)
           : 'bg-white text-[#1a4198] border-gray-200 dark:bg-slate-800 dark:text-blue-400 dark:border-slate-700'  // Style pasif (Putih)
@@ -18,7 +18,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon, isActive = fa
       `}
     >
       <div className="flex justify-between items-center w-full">
-        <h3 className={`font-semibold text-lg ${isActive ? 'text-white' : 'text-[#1a4198] dark:text-blue-400'}`}>
+        <h3 className={`font-semibold text-base md:text-lg ${isActive ? 'text-white' : 'text-[#1a4198] dark:text-blue-400'}`}>
           {title}
         </h3>
         {/* Render Icon */}
@@ -27,7 +27,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, count, icon, isActive = fa
         </div>
       </div>
       
-      <div className="text-9xl font-bold mt-8">
+      <div className="text-7xl md:text-9xl font-bold mt-8">
         {count}
       </div>
     </div>
