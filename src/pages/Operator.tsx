@@ -25,6 +25,7 @@ function Operator() {
 
   // --- Navigation & Role ---
   const navigate = useNavigate();
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [userRole, setUserRole] = useState<'admin' | 'operator'>('operator');
   const [userName, setUserName] = useState<string>('Satpam');
   const [activeTab, setActiveTab] = useState<'dashboard' | 'packages' | 'users' | 'rooms' | 'students' | 'employees'>('dashboard');

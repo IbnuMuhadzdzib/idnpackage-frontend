@@ -30,6 +30,9 @@ interface PackageItem {
   notes: string | null;
   photoUrl: string | null;
   createdAt: string;
+  previousLocation?: string | null;
+  pickedUpDate?: string | null;
+  manualName?: string | null;
 }
 
 /**
@@ -148,13 +151,6 @@ const PackageTable: React.FC<PackageTableProps> = ({
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const formatTime = (dateString: string) => {
-    // Force UTC parsing by appending 'Z' if it doesn't end with 'Z'
-    const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
-    const date = new Date(utcDateString);
-    return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
-  };
-
   const formatDate = (date: Date) => {
     const d = date.getDate().toString().padStart(2, '0');
     const m = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -197,108 +193,29 @@ const PackageTable: React.FC<PackageTableProps> = ({
 
   return (
     <>
-
-      {/* Tombol Filter Lokasi */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 py-3 border-gray-300 dark:border-slate-700">
-        {(['Semua', 'Sudah Diterima', 'Di Pos', 'Di Kantor'] as const).map((filter) => (
-          <button
-            key={filter}
-            onClick={() => setActiveFilter(filter)}
-            className={`py-3 rounded-xl font-bold text-sm transition-all duration-200
-                ${activeFilter === filter
-                ? 'bg-[#143C9C] text-white dark:bg-blue-600'
-                : 'bg-[#F2F2F2] dark:bg-slate-700 text-[#143C9C] dark:text-blue-400 border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600'
-              }
-              `}
-          >
-            {filter}
-          </button>
-        </div>
-
-        {/* Table Section */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left whitespace-nowrap">
-            <thead>
-              <tr className="border-b border-gray-300 dark:border-slate-700">
-                <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Penerima</th>
-                <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Kamar</th>
-                <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Catatan</th>
-                <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Foto</th>
-                <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Lokasi / Status</th>
-                <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-10 text-gray-500">
-                    Memuat data paket...
-                  </td>
-                </tr>
-              ) : filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-10 text-gray-500">
-                    Belum ada data paket untuk tanggal ini.
-                  </td>
-                </tr>
-              ) : (
-                filteredData.map((row) => {
-                  const badge = getLocationBadge(row.location);
-                  return (
-                    <tr key={row.id} className="hover:bg-gray-100/50 dark:hover:bg-slate-700/50 transition-colors border-b border-gray-200 dark:border-slate-700 last:border-0">
-                      <td className="px-6 py-4 text-gray-800 dark:text-gray-200 font-medium flex items-center gap-2">
-                        {row.studentId?.name || row.employeeId?.name || row.manualName || 'Tidak diketahui'}
-                        {row.employeeId ? (
-                          <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Staff</span>
-                        ) : row.manualName ? (
-                          <span className="text-[10px] uppercase tracking-wider font-semibold text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded">Manual</span>
-                        ) : null}
-                      </td>
-                      <td className="px-6 py-4 text-gray-800 dark:text-gray-200">
-                        {row.roomId?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-gray-500 dark:text-gray-400 max-w-xs truncate" title={row.notes || ''}>
-                        {row.notes || '-'}
-                      </td>
-                      <td className="px-6 py-4">
-                        {row.photoUrl ? (
-                          <img src={row.photoUrl} alt="Paket" className="w-10 h-10 object-cover rounded-md border border-gray-300" />
-                        ) : (
-                          <span className="text-gray-400 italic text-xs">No photo</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-4 py-1.5 rounded-full font-medium text-[13px] inline-block min-w-[90px] text-center ${badge.color}`}>
-                          {badge.label}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <button 
-                          onClick={() => {
-                            setSelectedPackage(row);
-                            setIsDetailModalOpen(true);
-                          }}
-                          className="bg-[#65B7FF] hover:bg-blue-400 text-gray-900 px-5 py-1.5 rounded-full font-medium text-[13px] transition-colors"
-                        >
-                          Cek Paket
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <div className="w-full font-sans">
-        <div className="bg-[#F6F7F9] dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-2xl overflow-hidden transition-colors">
+        {/* Tombol Filter Lokasi */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 py-3 border-gray-300 dark:border-slate-700">
+          {(['Semua', 'Sudah Diterima', 'Di Pos', 'Di Kantor'] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`py-3 rounded-xl font-bold text-sm transition-all duration-200
+                  ${activeFilter === filter
+                  ? 'bg-[#143C9C] text-white dark:bg-blue-600'
+                  : 'bg-[#F2F2F2] dark:bg-slate-700 text-[#143C9C] dark:text-blue-400 border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600'
+                }
+                `}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
 
+        <div className="bg-[#F6F7F9] dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-2xl overflow-hidden transition-colors mt-4">
           {/* Header Section */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-300 dark:border-slate-700">
             <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white tracking-wide">Data Paket</h2>
-
             <button
               onClick={() => setIsDatePickerOpen(true)}
               className="flex items-center gap-2 px-2 md:px-4 py-2 text-[#2D3A8C] dark:text-blue-300 border border-[#2D3A8C] dark:border-blue-400 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"
@@ -341,8 +258,13 @@ const PackageTable: React.FC<PackageTableProps> = ({
                     const badge = getLocationBadge(row.location);
                     return (
                       <tr key={row.id} className="hover:bg-gray-100/50 dark:hover:bg-slate-700/50 transition-colors border-b border-gray-200 dark:border-slate-700 last:border-0">
-                        <td className="px-6 py-4 text-gray-800 dark:text-gray-200 font-medium">
-                          {row.studentId?.name || 'Tidak diketahui'}
+                        <td className="px-6 py-4 text-gray-800 dark:text-gray-200 font-medium flex items-center gap-2">
+                          {row.studentId?.name || row.employeeId?.name || row.manualName || 'Tidak diketahui'}
+                          {row.employeeId ? (
+                            <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Staff</span>
+                          ) : row.manualName ? (
+                            <span className="text-[10px] uppercase tracking-wider font-semibold text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded">Manual</span>
+                          ) : null}
                         </td>
                         <td className="px-6 py-4 text-gray-800 dark:text-gray-200">
                           {row.roomId?.name || '-'}

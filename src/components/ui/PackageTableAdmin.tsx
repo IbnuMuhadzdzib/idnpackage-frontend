@@ -21,11 +21,14 @@ interface PackageItem {
   studentId?: Student;
   employeeId?: Employee;
   roomId?: Room;
-  location: 'security_post' | 'dormitory_office' | 'taken' | string;
+  location: string;
+  previousLocation?: string | null;
+  pickedUpDate?: string | null;
   notes: string | null;
   photoUrl: string | null;
-  ekspedisi?: string;
   createdAt: string;
+  ekspedisi?: string;
+  manualName?: string | null;
 }
 
 /**

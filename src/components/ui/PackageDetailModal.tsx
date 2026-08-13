@@ -7,10 +7,6 @@ interface Student {
   nis?: string;
 }
 
-interface Room {
-  id: number;
-  name: string;
-}
 
 /**
  * Tipe data paket
@@ -20,12 +16,12 @@ export interface PackageItem {
   studentId?: Student;
   roomId?: { id: number; name: string };
   location: string;
-  previousLocation: string | null;
+  previousLocation?: string | null;
   notes: string | null;
   photoUrl: string | null;
   ekspedisi?: string;
   createdAt: string;
-  pickedUpDate: string | null;
+  pickedUpDate?: string | null;
   manualName?: string | null;
 }
 
