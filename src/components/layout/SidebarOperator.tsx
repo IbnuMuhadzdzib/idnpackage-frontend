@@ -10,9 +10,9 @@ interface SidebarOperatorProps {
   /** Peran pengguna (menentukan tab yang ditampilkan) */
   role?: 'admin' | 'operator';
   /** Tab yang saat ini sedang aktif */
-  activeTab?: 'dashboard' | 'packages' | 'users' | 'rooms';
+  activeTab?: 'dashboard' | 'packages' | 'users' | 'rooms' | 'students' | 'employees';
   /** Fungsi callback untuk menangani perubahan tab */
-  onTabChange?: (tab: 'dashboard' | 'packages' | 'users' | 'rooms') => void;
+  onTabChange?: (tab: 'dashboard' | 'packages' | 'users' | 'rooms' | 'students' | 'employees') => void;
   /** Fungsi callback untuk logout */
   onLogout?: () => void;
 }
@@ -58,9 +58,39 @@ const SidebarOperator: React.FC<SidebarOperatorProps> = ({ role = 'operator', ac
             </svg>
           </button>
           
+          {/* Students Tab */}
+          <button
+            title="Data Santri"
+            onClick={() => onTabChange?.('students')}
+            className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center transition-all duration-200 ${
+              activeTab === 'students'
+                ? 'bg-[#143C9C] text-white shadow-md'
+                : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-[#143C9C] dark:hover:text-blue-400'
+            }`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </button>
+          
+          {/* Employees Tab */}
+          <button
+            title="Data Staff & Guru"
+            onClick={() => onTabChange?.('employees')}
+            className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center transition-all duration-200 ${
+              activeTab === 'employees'
+                ? 'bg-[#143C9C] text-white shadow-md'
+                : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-[#143C9C] dark:hover:text-blue-400'
+            }`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </button>
+
           {/* Users Tab */}
           <button
-            title="Data Santri & Pengguna"
+            title="Manajemen Pengguna"
             onClick={() => onTabChange?.('users')}
             className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center transition-all duration-200 ${
               activeTab === 'users'

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../../api/config';
 
 interface RoomItem {
     id: number;
@@ -68,8 +69,8 @@ export const AddRoomModal: React.FC<AddRoomModalProps> = ({ isOpen, onClose, onS
         try {
             const token = localStorage.getItem('token');
             const url = isEditMode
-                ? `${import.meta.env.VITE_API_URL}/rooms/${roomToEdit?.id}`
-                : `${import.meta.env.VITE_API_URL}/rooms`;
+                ? `${API_URL}/rooms/${roomToEdit?.id}`
+                : `${API_URL}/rooms`;
             const method = isEditMode ? 'PATCH' : 'POST';
 
             const payload = {

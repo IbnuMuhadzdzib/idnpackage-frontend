@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { API_URL } from '../../api/config';
 
 /**
  * Data statistik paket per bulan
@@ -55,7 +56,7 @@ const PackageAreaChart: React.FC<PackageAreaChartProps> = ({ onCekData }) => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/packages`, {
+        const res = await fetch(`${API_URL}/packages`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const raw = await res.json();

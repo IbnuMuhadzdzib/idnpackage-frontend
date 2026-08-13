@@ -1,5 +1,6 @@
 import './App.css'
 import { useState, useEffect } from 'react'
+import { API_URL } from './api/config';
 
 /**
  * Komponen root untuk tes koneksi ke backend (NestJS).
@@ -17,7 +18,7 @@ function App() {
 
   useEffect(() => {
     // Gunakan satu endpoint saja untuk mengetes
-    fetch(`${import.meta.env.VITE_API_URL}/packages`)
+    fetch(`${API_URL}/packages`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

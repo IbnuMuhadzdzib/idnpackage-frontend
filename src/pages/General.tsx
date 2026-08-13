@@ -14,6 +14,7 @@ import PackageIconDark from '../assets/package_icon_dark.png'
 import RecievedIconDark from '../assets/hand_icon_dark.png'
 import OfficeIconDark from '../assets/building_icon_dark.png'
 import PosIconDark from '../assets/shield_icon_dark.png'
+import { API_URL } from '../api/config';
 
 /**
  * Halaman pencarian dan statistik paket secara umum.
@@ -68,7 +69,7 @@ function General() {
         const fetchStats = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/packages`, {
+                const response = await fetch(`${API_URL}/packages`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

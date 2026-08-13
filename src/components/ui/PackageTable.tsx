@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import PackageDetailModal from './PackageDetailModal';
+import { API_URL } from '../../api/config';
 
 // --- 1. DEFINISI TYPE & INTERFACE (WAJIB UNTUK TYPESCRIPT) ---
 interface Student {
   id: number;
   name: string;
   nis?: string;
+}
+
+interface Employee {
+  id: number;
+  name: string;
+  division: string;
+  position?: string;
 }
 
 interface Room {
@@ -16,6 +24,7 @@ interface Room {
 interface PackageItem {
   id: number;
   studentId?: Student;
+  employeeId?: Employee;
   roomId?: Room;
   location: 'security_post' | 'dormitory_office' | 'taken' | string;
   notes: string | null;
@@ -69,7 +78,7 @@ const PackageTable: React.FC<PackageTableProps> = ({
       try {
         setIsLoading(true);
         const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/packages`, {
+        const response = await fetch(`${API_URL}/packages`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -139,6 +148,13 @@ const PackageTable: React.FC<PackageTableProps> = ({
   const today = new Date();
   today.setHours(0,0,0,0);
 
+  const formatTime = (dateString: string) => {
+    // Force UTC parsing by appending 'Z' if it doesn't end with 'Z'
+    const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+    const date = new Date(utcDateString);
+    return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+  };
+
   const formatDate = (date: Date) => {
     const d = date.getDate().toString().padStart(2, '0');
     const m = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -168,10 +184,13 @@ const PackageTable: React.FC<PackageTableProps> = ({
 
     // 3. Search Query Match
     const searchMatch = searchQuery === '' || 
-      (row.studentId?.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+      (row.studentId?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (row.employeeId?.name || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     // 4. Room Match
-    const roomMatch = selectedRoom === 'Semua Kamar' || row.roomId?.name === selectedRoom;
+    // Jika "Semua Kamar" dipilih, tampilkan semua (termasuk staff)
+    // Jika kamar tertentu dipilih, hanya tampilkan paket santri dengan kamar tsb (hilangkan staff)
+    const roomMatch = selectedRoom === 'Semua Kamar' || (!row.employeeId && row.roomId?.name === selectedRoom);
 
     return dateMatch && locationMatch && searchMatch && roomMatch;
   });
@@ -246,8 +265,13 @@ const PackageTable: React.FC<PackageTableProps> = ({
                   const badge = getLocationBadge(row.location);
                   return (
                     <tr key={row.id} className="hover:bg-gray-100/50 dark:hover:bg-slate-700/50 transition-colors border-b border-gray-200 dark:border-slate-700 last:border-0">
-                      <td className="px-6 py-4 text-gray-800 dark:text-gray-200 font-medium">
-                        {row.studentId?.name || 'Tidak diketahui'}
+                      <td className="px-6 py-4 text-gray-800 dark:text-gray-200 font-medium flex items-center gap-2">
+                        {row.studentId?.name || row.employeeId?.name || row.manualName || 'Tidak diketahui'}
+                        {row.employeeId ? (
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Staff</span>
+                        ) : row.manualName ? (
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded">Manual</span>
+                        ) : null}
                       </td>
                       <td className="px-6 py-4 text-gray-800 dark:text-gray-200">
                         {row.roomId?.name || '-'}

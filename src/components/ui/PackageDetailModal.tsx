@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_URL } from '../../api/config';
 
 interface Student {
   id: number;
@@ -17,13 +18,15 @@ interface Room {
 export interface PackageItem {
   id: number;
   studentId?: Student;
-  roomId?: Room;
+  roomId?: { id: number; name: string };
   location: string;
-  previousLocation?: string | null;
+  previousLocation: string | null;
   notes: string | null;
   photoUrl: string | null;
   ekspedisi?: string;
   createdAt: string;
+  pickedUpDate: string | null;
+  manualName?: string | null;
 }
 
 /**
@@ -75,12 +78,17 @@ const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ isOpen, onClose
   const canToggleTaken = userRole === 'teacher' || userRole === 'admin';
 
   const formatTime = (ds: string) => {
-    return new Date(ds).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+    // Force UTC parsing by appending 'Z' if it doesn't end with 'Z'
+    const utcDs = ds.endsWith('Z') ? ds : ds + 'Z';
+    const d = new Date(utcDs);
+    return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
   };
   
   const formatDate = (ds: string) => {
-    const d = new Date(ds);
-    const m = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    // Force UTC parsing by appending 'Z' if it doesn't end with 'Z'
+    const utcDs = ds.endsWith('Z') ? ds : ds + 'Z';
+    const d = new Date(utcDs);
+    const m = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     return `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()}`;
   };
 
@@ -101,7 +109,7 @@ const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ isOpen, onClose
     setToggleError(null);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/packages/${packageData.id}/toggle-taken`, {
+      const res = await fetch(`${API_URL}/packages/${packageData.id}/toggle-taken`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -218,7 +226,11 @@ const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ isOpen, onClose
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Nama Penerima</p>
                   <p className="font-semibold text-gray-900 dark:text-white text-base">
-                    {packageData.studentId?.name || 'Tidak diketahui'}
+                    {packageData.studentId
+                      ? packageData.studentId.name
+                      : packageData.manualName
+                      ? packageData.manualName
+                      : 'Tidak diketahui'}
                   </p>
                 </div>
                 <div>

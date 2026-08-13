@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../../api/config';
 
 interface Room {
   id: number;
@@ -45,7 +46,7 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
     const fetchRooms = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/rooms`, {
+        const response = await fetch(`${API_URL}/rooms`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

@@ -2,30 +2,14 @@ import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { API_URL } from '../../api/config';
 
-/**
- * Properti untuk komponen BulkImportModal
- */
 interface BulkImportModalProps {
-  /** Menentukan apakah modal terbuka */
   isOpen: boolean;
-  /** Fungsi untuk menutup modal */
   onClose: () => void;
-  /** Fungsi callback setelah impor berhasil */
   onSuccess?: () => void;
 }
 
-// ---- Reset All Button Component ----
-/**
- * Komponen tombol untuk mereset seluruh data santri.
- * Akan menampilkan konfirmasi sebelum melakukan penghapusan data.
- * 
- * @param {object} props - Properti komponen
- * @param {function} props.onSuccess - Fungsi callback jika reset berhasil
- * @param {function} props.onError - Fungsi callback jika terjadi error
- * @param {function} props.onSuccessMessage - Fungsi callback untuk mengatur pesan sukses
- * @returns {JSX.Element} Komponen tombol
- */
 const ResetAllButton: React.FC<{ 
   onSuccess?: () => void; 
   onError: (msg: string) => void;
@@ -38,7 +22,7 @@ const ResetAllButton: React.FC<{
     setIsResetting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/students/reset-all`, {
+      const res = await fetch(`${API_URL}/students/reset-all`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -91,14 +75,8 @@ const ResetAllButton: React.FC<{
   );
 };
 
-/**
- * Modal untuk mengimpor data santri secara massal (bulk) dari file Excel/CSV.
- * Juga mendukung pengunduhan template Excel.
- * 
- * @param {BulkImportModalProps} props - Properti komponen
- * @returns {JSX.Element | null} Komponen modal
- */
 export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const [importType, setImportType] = useState<'student' | 'employee'>('student');
   const [dataPreview, setDataPreview] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,78 +84,89 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
   const [importResult, setImportResult] = useState<{ added: number; updated: number; skipped: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleTypeChange = (type: 'student' | 'employee') => {
+    setImportType(type);
+    setDataPreview([]);
+    setError(null);
+    setSuccessMsg(null);
+    setImportResult(null);
+  };
+
   const handleDownloadTemplate = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Fetch rooms from backend to use in dropdown
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/rooms`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const resData = await res.json();
-      const rooms = Array.isArray(resData) ? resData : (Array.isArray(resData?.data) ? resData.data : []);
-      const roomNames = rooms.map((r: any) => r.name);
-
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet('Template_Siswa');
+      const worksheet = workbook.addWorksheet(`Template_${importType === 'student' ? 'Siswa' : 'Staff'}`);
 
-      // Setup columns with wide widths
-      worksheet.columns = [
-        { header: 'Nama', key: 'name', width: 35 },
-        { header: 'Kamar', key: 'room', width: 25 },
-        { header: 'NIS', key: 'nis', width: 20 },
-        { header: '', key: 'empty', width: 5 }, // Spacer
-        { header: 'Instruksi Pengisian', key: 'instructions', width: 60 }
-      ];
+      if (importType === 'student') {
+        const res = await fetch(`${API_URL}/rooms`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const resData = await res.json();
+        const rooms = Array.isArray(resData) ? resData : (Array.isArray(resData?.data) ? resData.data : []);
+        const roomNames = rooms.map((r: any) => r.name);
 
-      // Style the header row (Row 1)
+        worksheet.columns = [
+          { header: 'Nama', key: 'name', width: 35 },
+          { header: 'Kamar', key: 'room', width: 25 },
+          { header: 'NIS', key: 'nis', width: 20 },
+          { header: '', key: 'empty', width: 5 },
+          { header: 'Instruksi Pengisian', key: 'instructions', width: 60 }
+        ];
+
+        if (roomNames.length > 0) {
+          const roomListStr = `"${roomNames.join(',')}"`;
+          (worksheet as any).dataValidations.add('B2:B1000', {
+            type: 'list',
+            allowBlank: true,
+            showErrorMessage: true,
+            errorTitle: 'Kamar Tidak Valid',
+            error: 'Silakan pilih kamar dari dropdown yang tersedia.',
+            formulae: [roomListStr]
+          });
+        }
+
+        worksheet.addRow({ name: 'Fadlan', room: roomNames[0] || 'Saung 8', nis: '12345', instructions: '1. "Nama" adalah nama lengkap siswa (Wajib isi).' });
+        worksheet.addRow({ name: 'Afsar', room: roomNames[1] || 'Saung 6', nis: '12346', instructions: '2. "Kamar" adalah nama saung/asrama (Pilih dari dropdown).' });
+        worksheet.addRow({ name: 'Zahir', room: roomNames[2] || 'Saung 8', nis: '12347', instructions: '3. "NIS" adalah nomor induk siswa (Opsional).' });
+      } else {
+        worksheet.columns = [
+          { header: 'Nama', key: 'name', width: 35 },
+          { header: 'Divisi', key: 'division', width: 25 },
+          { header: 'Jabatan', key: 'position', width: 25 },
+          { header: '', key: 'empty', width: 5 },
+          { header: 'Instruksi Pengisian', key: 'instructions', width: 60 }
+        ];
+
+        worksheet.addRow({ name: 'Budi Hartono', division: 'Sekolah', position: 'Kepala Sekolah', instructions: '1. "Nama" adalah nama lengkap staff/guru (Wajib isi).' });
+        worksheet.addRow({ name: 'Siti Aminah', division: 'Asrama', position: 'Musyrifah', instructions: '2. "Divisi" adalah divisi tempat bekerja (Wajib isi).' });
+        worksheet.addRow({ name: 'Ahmad Dahlan', division: 'Dapur', position: 'Koki', instructions: '3. "Jabatan" adalah jabatan/posisi (Opsional).' });
+      }
+
       const headerRow = worksheet.getRow(1);
       headerRow.eachCell((cell, colNumber) => {
         cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        
-        // Color header depending on the column
         if (colNumber <= 3) {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF143C9C' } }; // Blue header
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF143C9C' } };
         } else if (colNumber === 5) {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF63DF8A' } }; // Green header
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF63DF8A' } };
         }
       });
       headerRow.height = 30;
 
-      // Add data validation to Kamar column (Column B, Row 2 to 1000)
-      if (roomNames.length > 0) {
-        // Gabungkan nama kamar dengan koma. (Limit Excel ~255 karakter)
-        const roomListStr = `"${roomNames.join(',')}"`;
-        
-        (worksheet as any).dataValidations.add('B2:B1000', {
-          type: 'list',
-          allowBlank: true,
-          showErrorMessage: true,
-          errorTitle: 'Kamar Tidak Valid',
-          error: 'Silakan pilih kamar dari dropdown yang tersedia.',
-          formulae: [roomListStr]
-        });
-      }
-
-      // Add example rows and instructions
-      worksheet.addRow({ name: 'Fadlan', room: roomNames[0] || 'Saung 8', nis: '12345', instructions: '1. "Nama" adalah nama lengkap siswa (Wajib isi).' });
-      worksheet.addRow({ name: 'Afsar', room: roomNames[1] || 'Saung 6', nis: '12346', instructions: '2. "Kamar" adalah nama saung/asrama (Pilih dari dropdown).' });
-      worksheet.addRow({ name: 'Zahir', room: roomNames[2] || 'Saung 8', nis: '12347', instructions: '3. "NIS" adalah nomor induk siswa (Opsional).' });
       worksheet.addRow({ instructions: '4. Jangan ubah nama kolom di baris paling atas (baris 1).' });
-      worksheet.addRow({ instructions: '5. Anda bisa menghapus baris 2-4 ini dan menggantinya dengan data Anda.' });
-      worksheet.addRow({ instructions: '6. PENTING (EXCEL): Klik "Enable Editing" di baris kuning atas agar dropdown muncul.' });
+      worksheet.addRow({ instructions: '5. Anda bisa menghapus contoh baris data dan menggantinya dengan data Anda.' });
 
-      // Format instruction cells to wrap text
       for (let i = 2; i <= 7; i++) {
         const instCell = worksheet.getCell(`E${i}`);
         instCell.alignment = { vertical: 'top', wrapText: true };
         if (i > 4) worksheet.getRow(i).height = 25;
       }
 
-      // Generate Excel file
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      saveAs(blob, 'Template_Data_Siswa.xlsx');
+      saveAs(blob, `Template_Data_${importType === 'student' ? 'Siswa' : 'Staff'}.xlsx`);
     } catch (err) {
       console.error("Gagal mendownload template:", err);
       setError("Gagal mendownload template. Pastikan koneksi internet stabil.");
@@ -199,24 +188,40 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws);
         
-        // Asumsi format excel: Nama, Kamar, NIS
-        const formattedData = data.map((row: any) => ({
-          name: String(row['Nama'] || row['name'] || row['Nama Siswa'] || '').trim(),
-          roomName: String(row['Kamar'] || row['room'] || row['Saung'] || row['Asrama'] || '').trim(),
-          nis: row['NIS'] || row['nis'] ? String(row['NIS'] || row['nis']).trim() : '',
-        })).filter(item => item.name && item.roomName);
-
-        if (formattedData.length === 0) {
-          setError("Data kosong atau format kolom tidak sesuai. Pastikan ada kolom 'Nama' dan 'Kamar'.");
+        let formattedData = [];
+        
+        if (importType === 'student') {
+          formattedData = data.map((row: any) => ({
+            name: String(row['Nama'] || row['name'] || row['Nama Siswa'] || '').trim(),
+            roomName: String(row['Kamar'] || row['room'] || row['Saung'] || row['Asrama'] || '').trim(),
+            nis: row['NIS'] || row['nis'] ? String(row['NIS'] || row['nis']).trim() : '',
+          })).filter((item: any) => item.name && item.roomName);
+          
+          if (formattedData.length === 0) {
+            setError("Data kosong atau format kolom tidak sesuai. Pastikan ada kolom 'Nama' dan 'Kamar'.");
+            return;
+          }
         } else {
-          setError(null);
-          setDataPreview(formattedData);
+          formattedData = data.map((row: any) => ({
+            name: String(row['Nama'] || row['name'] || row['Nama Staff'] || '').trim(),
+            division: String(row['Divisi'] || row['division'] || '').trim(),
+            position: row['Jabatan'] || row['position'] ? String(row['Jabatan'] || row['position']).trim() : '',
+          })).filter((item: any) => item.name && item.division);
+
+          if (formattedData.length === 0) {
+            setError("Data kosong atau format kolom tidak sesuai. Pastikan ada kolom 'Nama' dan 'Divisi'.");
+            return;
+          }
         }
+
+        setError(null);
+        setDataPreview(formattedData);
       } catch (err) {
         setError("Gagal membaca file Excel. Pastikan format valid.");
       }
     };
     reader.readAsBinaryString(file);
+    e.target.value = '';
   };
 
   const handleImport = async () => {
@@ -227,13 +232,16 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/students/bulk`, {
+      const endpoint = importType === 'student' ? '/students/bulk' : '/employees/bulk';
+      const payloadKey = importType === 'student' ? 'students' : 'employees';
+      
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ students: dataPreview }),
+        body: JSON.stringify({ [payloadKey]: dataPreview }),
       });
 
       const resData = await res.json();
@@ -246,7 +254,6 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
         throw new Error(errorMsg);
       }
 
-      // Show result summary — resData.data contains {added, updated, skipped}
       const result = resData?.data || resData;
       setImportResult({
         added: result.added ?? 0,
@@ -266,12 +273,37 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-gray-50 dark:bg-slate-800">
-          <h2 className="font-bold text-gray-800 dark:text-white">Import Data Siswa (Excel/CSV)</h2>
+          <h2 className="font-bold text-gray-800 dark:text-white">Import Data (Excel/CSV)</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+        </div>
+
+        <div className="px-6 pt-4">
+          <div className="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-lg">
+            <button
+              onClick={() => handleTypeChange('student')}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                importType === 'student'
+                  ? 'bg-white dark:bg-slate-700 text-[#143C9C] dark:text-blue-400 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+              }`}
+            >
+              Data Santri
+            </button>
+            <button
+              onClick={() => handleTypeChange('employee')}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                importType === 'employee'
+                  ? 'bg-white dark:bg-slate-700 text-[#143C9C] dark:text-blue-400 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+              }`}
+            >
+              Data Staff & Guru
+            </button>
+          </div>
         </div>
 
         <div className="p-6 flex-1 overflow-y-auto">
@@ -287,7 +319,6 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
           )}
 
           <div className="mb-6 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-5 shadow-sm relative overflow-hidden group">
-            {/* Dekorasi latar belakang untuk kesan premium */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 dark:bg-blue-900/20 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none transition-all group-hover:bg-blue-100 dark:group-hover:bg-blue-800/30"></div>
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
@@ -308,7 +339,9 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-semibold mb-3 text-gray-800 dark:text-white">Upload File Data Siswa</label>
+            <label className="block text-sm font-semibold mb-3 text-gray-800 dark:text-white">
+              Upload File Data {importType === 'student' ? 'Santri' : 'Staff/Guru'}
+            </label>
             <div className="relative border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl p-8 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors text-center group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
               <div className="mx-auto w-12 h-12 mb-3 bg-blue-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-[#143C9C] dark:text-blue-400 group-hover:scale-110 transition-transform">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,15 +365,24 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
 
           {dataPreview.length > 0 && (
             <div className="mt-4">
-              <h3 className="font-semibold text-sm mb-2 dark:text-white">Preview Data ({dataPreview.length} Siswa)</h3>
+              <h3 className="font-semibold text-sm mb-2 dark:text-white">Preview Data ({dataPreview.length} Baris)</h3>
               <div className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
                 <table className="w-full text-sm text-left whitespace-nowrap">
                   <thead className="bg-gray-50 dark:bg-slate-800 sticky top-0">
                     <tr>
                       <th className="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">No</th>
                       <th className="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Nama</th>
-                      <th className="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">NIS</th>
-                      <th className="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Kamar/Asrama</th>
+                      {importType === 'student' ? (
+                        <>
+                          <th className="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Kamar/Asrama</th>
+                          <th className="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">NIS</th>
+                        </>
+                      ) : (
+                        <>
+                          <th className="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Divisi</th>
+                          <th className="px-4 py-2 font-medium text-gray-600 dark:text-gray-300">Jabatan</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -348,8 +390,17 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                       <tr key={idx} className="border-t border-gray-100 dark:border-slate-700">
                         <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
                         <td className="px-4 py-2 dark:text-gray-200">{row.name}</td>
-                        <td className="px-4 py-2 text-gray-400 dark:text-gray-400 text-xs">{row.nis || '-'}</td>
-                        <td className="px-4 py-2 dark:text-gray-200">{row.roomName}</td>
+                        {importType === 'student' ? (
+                          <>
+                            <td className="px-4 py-2 dark:text-gray-200">{row.roomName}</td>
+                            <td className="px-4 py-2 text-gray-400 dark:text-gray-400 text-xs">{row.nis || '-'}</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-4 py-2 dark:text-gray-200">{row.division}</td>
+                            <td className="px-4 py-2 text-gray-400 dark:text-gray-400 text-xs">{row.position || '-'}</td>
+                          </>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -358,7 +409,6 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
             </div>
           )}
 
-          {/* Import Result Summary */}
           {importResult && (
             <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
               <p className="text-sm font-bold text-green-700 dark:text-green-400 mb-3 flex items-center gap-2">
@@ -381,15 +431,11 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Dilewati</p>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                Diperbarui = Santri dengan NIS yang sama diupdate nama/kamarnya. Dilewati = Sudah ada & tidak berubah.
-              </p>
             </div>
           )}
         </div>
 
         <div className="px-6 py-4 border-t border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800 flex items-center justify-between gap-3">
-          {/* Danger Zone: Reset All */}
           <ResetAllButton 
             onSuccess={onSuccess} 
             onError={setError}

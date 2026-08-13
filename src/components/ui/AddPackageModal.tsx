@@ -1,40 +1,37 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { CustomDropdown } from './CustomDropdown';
+import { SearchableDropdown, type Option } from './SearchableDropdown';
+import { API_URL } from '../../api/config';
 
 // --- Type Definitions ---
 interface Student {
   id: number;
   name: string;
   nis?: string;
+  roomId?: { id: number; name: string };
 }
 
-interface Room {
+interface Employee {
   id: number;
   name: string;
-  students?: Student[];
 }
 
 interface PackageItem {
   id: number;
   studentId?: Student;
-  roomId?: Room;
+  employeeId?: Employee;
+  roomId?: { id: number; name: string };
   location: string;
   notes: string | null;
   photoUrl: string | null;
   createdAt: string;
+  manualName?: string | null;
 }
 
-/**
- * Properti untuk komponen AddPackageModal
- */
 interface AddPackageModalProps {
-  /** Menentukan apakah modal sedang terbuka */
   isOpen: boolean;
-  /** Data paket yang akan diedit (jika dalam mode edit), atau null untuk tambah baru */
   packageToEdit?: PackageItem | null;
-  /** Fungsi untuk menutup modal */
   onClose: () => void;
-  /** Fungsi callback jika operasi berhasil */
   onSuccess?: () => void;
 }
 
@@ -43,9 +40,6 @@ const LOCATION_OPTIONS = [
   { value: 'dormitory_office', label: 'Kantor Asrama' },
 ];
 
-// -----------------------------------------------------------------------
-// Image compression helper
-// -----------------------------------------------------------------------
 const compressImage = (dataUrl: string, maxPx = 1024, quality = 0.78): Promise<string> =>
   new Promise((resolve) => {
     const img = new Image();
@@ -64,79 +58,90 @@ const compressImage = (dataUrl: string, maxPx = 1024, quality = 0.78): Promise<s
     img.src = dataUrl;
   });
 
-// -----------------------------------------------------------------------
-// Main component
-// -----------------------------------------------------------------------
-/**
- * Modal untuk menambah atau mengedit data paket.
- * Mendukung pengambilan foto dari kamera secara langsung atau memilih dari galeri.
- *
- * @param {AddPackageModalProps} props - Properti komponen
- * @returns {JSX.Element | null} Komponen modal
- */
 const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit, onClose, onSuccess }) => {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [isLoadingRooms, setIsLoadingRooms] = useState(false);
+  const [options, setOptions] = useState<Option[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Form fields
-  const [selectedStudentId, setSelectedStudentId] = useState<string>('');
-  const [selectedRoomId,    setSelectedRoomId]    = useState<string>('');
-  const [selectedLocation,  setSelectedLocation]  = useState<string>('security_post');
-  const [notes,    setNotes]    = useState<string>('');
+  const [selectedPerson, setSelectedPerson] = useState<string>('');
+  const [isManualMode, setIsManualMode] = useState<boolean>(false);
+  const [manualName, setManualName] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<string>('security_post');
+  const [notes, setNotes] = useState<string>('');
   
   // Photo state
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   // Camera state
-  const [showCamera, setShowCamera]     = useState(false);
-  const [cameraError, setCameraError]   = useState<string | null>(null);
-  const videoRef    = useRef<HTMLVideoElement>(null);
-  const streamRef   = useRef<MediaStream | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ------------------------------------------------------------------
-  // Fetch rooms when modal opens
-  // ------------------------------------------------------------------
   useEffect(() => {
     if (!isOpen) return;
-    const fetchRooms = async () => {
-      setIsLoadingRooms(true);
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/rooms`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-        const list: Room[] = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
-        setRooms(list);
-      } catch {
-        setRooms([]);
+        const [studentsRes, employeesRes] = await Promise.all([
+          fetch(`${API_URL}/students`, { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(`${API_URL}/employees`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+        const studentsData = await studentsRes.json();
+        const employeesData = await employeesRes.json();
+
+        const studentsList: Student[] = Array.isArray(studentsData) ? studentsData : (studentsData?.data || []);
+        const employeesList: Employee[] = Array.isArray(employeesData) ? employeesData : (employeesData?.data || []);
+
+        const combinedOptions: Option[] = [
+          ...studentsList.map(s => ({
+            value: `student-${s.id}`,
+            label: s.name,
+            type: 'student' as const,
+            roomId: s.roomId?.id
+          })),
+          ...employeesList.map(e => ({
+            value: `employee-${e.id}`,
+            label: e.name,
+            type: 'employee' as const
+          }))
+        ];
+        setOptions(combinedOptions);
+      } catch (err) {
+        console.error("Failed to fetch data", err);
       } finally {
-        setIsLoadingRooms(false);
+        setIsLoading(false);
       }
     };
-    fetchRooms();
+    fetchData();
   }, [isOpen]);
 
-  // ------------------------------------------------------------------
-  // Handle Form Modes (Add vs Edit Data Initializer)
-  // ------------------------------------------------------------------
   useEffect(() => {
     if (isOpen) {
       if (packageToEdit) {
-        // Mode Edit
-        setSelectedRoomId(packageToEdit.roomId ? String(packageToEdit.roomId.id) : '');
-        setSelectedStudentId(packageToEdit.studentId ? String(packageToEdit.studentId.id) : '');
+        if (packageToEdit.studentId) {
+          setSelectedPerson(`student-${packageToEdit.studentId.id}`);
+          setIsManualMode(false);
+        } else if (packageToEdit.employeeId) {
+          setSelectedPerson(`employee-${packageToEdit.employeeId.id}`);
+          setIsManualMode(false);
+        } else if (packageToEdit.manualName) {
+          setIsManualMode(true);
+          setManualName(packageToEdit.manualName);
+          setSelectedPerson('');
+        }
         setSelectedLocation(packageToEdit.location || 'security_post');
         setNotes(packageToEdit.notes || '');
         setPhotoPreview(packageToEdit.photoUrl || null);
       } else {
-        // Mode Tambah
-        setSelectedStudentId('');
-        setSelectedRoomId('');
+        setSelectedPerson('');
+        setIsManualMode(false);
+        setManualName('');
         setSelectedLocation('security_post');
         setNotes('');
         setPhotoPreview(null);
@@ -149,9 +154,6 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
     }
   }, [isOpen, packageToEdit]);
 
-  // ------------------------------------------------------------------
-  // Camera helpers
-  // ------------------------------------------------------------------
   const startCamera = useCallback(async () => {
     setCameraError(null);
     try {
@@ -161,7 +163,6 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
       });
       streamRef.current = stream;
       setShowCamera(true);
-      // Assign stream after render
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -184,7 +185,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
   const capturePhoto = useCallback(async () => {
     if (!videoRef.current) return;
     const canvas = document.createElement('canvas');
-    canvas.width  = videoRef.current.videoWidth;
+    canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -206,9 +207,6 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
     setShowCamera(false);
   }, [stopCamera]);
 
-  // ------------------------------------------------------------------
-  // Gallery / file upload
-  // ------------------------------------------------------------------
   const handleGalleryPick = () => fileInputRef.current?.click();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,15 +219,20 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
       setPhotoPreview(compressed);
     };
     reader.readAsDataURL(file);
-    // Reset so same file can be picked again
     e.target.value = '';
   };
 
-  // ------------------------------------------------------------------
-  // Submit
-  // ------------------------------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isManualMode && !manualName.trim()) {
+      setSubmitError("Silakan ketik nama penerima manual.");
+      return;
+    }
+    if (!isManualMode && !selectedPerson) {
+      setSubmitError("Silakan pilih penerima paket.");
+      return;
+    }
+    
     setSubmitError(null);
     setIsSubmitting(true);
 
@@ -244,21 +247,23 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
         } catch (e) { }
       }
 
+      const isStudent = !isManualMode && selectedPerson.startsWith('student-');
+      const personId = !isManualMode ? Number(selectedPerson.split('-')[1]) : undefined;
+      const selectedOpt = !isManualMode ? options.find(o => o.value === selectedPerson) : undefined;
+
       const payload = {
-        studentId: Number(selectedStudentId),
-        roomId:    Number(selectedRoomId),
-        location:  selectedLocation,
-        notes:     notes || "",
-        photoUrl:  photoPreview || "",
+        studentId: isStudent ? personId : undefined,
+        employeeId: (!isManualMode && !isStudent) ? personId : undefined,
+        roomId: isStudent ? selectedOpt?.roomId : undefined,
+        manualName: isManualMode ? manualName.trim() : undefined,
+        location: selectedLocation,
+        notes: notes || "",
+        photoUrl: photoPreview || "",
         createdBy: currentUserId,
       };
 
       const token = localStorage.getItem('token');
-
-      // Tentukan URL & Method dinamis berdasarkan status mode form
-      const url = packageToEdit
-        ? `${import.meta.env.VITE_API_URL}/packages/${packageToEdit.id}`
-        : `${import.meta.env.VITE_API_URL}/packages`;
+      const url = packageToEdit ? `${API_URL}/packages/${packageToEdit.id}` : `${API_URL}/packages`;
       const method = packageToEdit ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
@@ -291,18 +296,12 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
     }
   };
 
-  // Derive students dari rooms
-  const selectedRoom = rooms.find(r => r.id === Number(selectedRoomId));
-  const filteredStudents: Student[] = selectedRoom?.students ?? [];
-
   if (!isOpen) return null;
 
   return (
     <>
-      {/* ===== CAMERA OVERLAY ===== */}
       {showCamera && (
         <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center">
-          {/* Top bar */}
           <div className="absolute top-0 left-0 right-0 flex justify-between items-center px-5 pt-6 pb-4 bg-gradient-to-b from-black/70 to-transparent z-10">
             <button
               onClick={cancelCamera}
@@ -317,7 +316,6 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
             <div className="w-16" />
           </div>
 
-          {/* Camera error */}
           {cameraError ? (
             <div className="flex flex-col items-center gap-4 px-8 text-center">
               <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -335,16 +333,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
             </div>
           ) : (
             <>
-              {/* Video stream */}
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
-
-              {/* Capture button */}
+              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
               <div className="absolute bottom-0 left-0 right-0 flex justify-center items-center pb-12 pt-6 bg-gradient-to-t from-black/70 to-transparent">
                 <button
                   onClick={capturePhoto}
@@ -358,7 +347,6 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
         </div>
       )}
 
-      {/* ===== FORM MODAL ===== */}
       <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -367,7 +355,6 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
           className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto"
           style={{ animation: 'modalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
         >
-          {/* ---- Header ---- */}
           <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-slate-700">
             <button
               type="button"
@@ -383,25 +370,16 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
             </h2>
           </div>
 
-          {/* ---- Form Body ---- */}
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-
-            {/* ---- Photo Section ---- */}
             {photoPreview ? (
-              /* Preview foto yang sudah diambil */
               <div className="relative w-full h-44 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-600">
                 <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-                {/* Overlay action buttons */}
                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center gap-3">
                   <button
                     type="button"
                     onClick={retakePhoto}
                     className="flex items-center gap-2 bg-white/90 hover:bg-white text-gray-900 px-4 py-2 rounded-full font-semibold text-sm shadow-md transition-all"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
                     Foto Ulang
                   </button>
                   <button
@@ -409,19 +387,14 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
                     onClick={() => setPhotoPreview(null)}
                     className="flex items-center gap-2 bg-red-500/90 hover:bg-red-500 text-white px-4 py-2 rounded-full font-semibold text-sm shadow-md transition-all"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
                     Hapus
                   </button>
                 </div>
               </div>
             ) : (
-              /* Pilihan upload: Kamera atau Galeri */
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Foto Paket <span className="text-gray-400 font-normal">(opsional)</span></p>
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Tombol Kamera */}
                   <button
                     type="button"
                     onClick={startCamera}
@@ -438,8 +411,6 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
                       <p className="text-[11px] text-white/70">Foto langsung</p>
                     </div>
                   </button>
-
-                  {/* Tombol Galeri */}
                   <button
                     type="button"
                     onClick={handleGalleryPick}
@@ -456,69 +427,64 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
                     </div>
                   </button>
                 </div>
-
-                {cameraError && (
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">{cameraError}</p>
-                )}
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
               </div>
             )}
 
-            {/* Nama Penerima */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Nama Penerima <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center bg-gray-100 dark:bg-slate-800 p-0.5 rounded-lg border border-gray-200 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setIsManualMode(false)}
+                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${!isManualMode ? 'bg-white dark:bg-slate-600 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                  >
+                    Pilih Data
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsManualMode(true)}
+                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${isManualMode ? 'bg-[#143C9C] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                  >
+                    Input Manual
+                  </button>
+                </div>
+              </div>
+
+              {!isManualMode ? (
+                <SearchableDropdown
+                  options={options}
+                  value={selectedPerson}
+                  onChange={(val) => setSelectedPerson(val)}
+                  placeholder={isLoading ? "Memuat data..." : "Cari nama santri atau staff"}
+                  disabled={isLoading}
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={manualName}
+                  onChange={(e) => setManualName(e.target.value)}
+                  placeholder="Ketik nama penerima anonim..."
+                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#143C9C] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#143C9C]/10 transition-all"
+                />
+              )}
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                Nama Penerima <span className="text-red-500">*</span>
+                Lokasi <span className="text-red-500">*</span>
               </label>
               <CustomDropdown
-                options={[
-                  { value: '', label: !selectedRoomId ? 'Pilih Kamar/Saung terlebih dahulu' : isLoadingRooms ? 'Memuat data santri...' : filteredStudents.length === 0 ? 'Tidak ada data santri di kamar ini' : 'Pilih Nama Penerima' },
-                  ...filteredStudents.map(s => ({ value: String(s.id), label: s.name }))
-                ]}
-                value={selectedStudentId}
-                onChange={setSelectedStudentId}
-                placeholder="Pilih Nama Penerima"
-                disabled={isLoadingRooms || !selectedRoomId}
+                options={LOCATION_OPTIONS}
+                value={selectedLocation}
+                onChange={setSelectedLocation}
+                placeholder="Pilih Lokasi"
               />
             </div>
 
-            {/* Kamar & Lokasi */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Kamar */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Kamar/Saung <span className="text-red-500">*</span>
-                </label>
-                <CustomDropdown
-                  options={rooms.map(r => ({ value: String(r.id), label: r.name }))}
-                  value={selectedRoomId}
-                  onChange={(val) => { setSelectedRoomId(val); setSelectedStudentId(''); }}
-                  placeholder="Pilih Kamar/Saung"
-                  disabled={isLoadingRooms}
-                />
-              </div>
-
-              {/* Lokasi */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Lokasi <span className="text-red-500">*</span>
-                </label>
-                <CustomDropdown
-                  options={LOCATION_OPTIONS.map(loc => ({ value: loc.value, label: loc.label }))}
-                  value={selectedLocation}
-                  onChange={setSelectedLocation}
-                  placeholder="Pilih Lokasi"
-                />
-              </div>
-            </div>
-
-            {/* Catatan */}
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                 Catatan <span className="text-gray-400 font-normal">(opsional)</span>
@@ -532,50 +498,24 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
               />
             </div>
 
-            {/* Error Alert */}
             {submitError && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm rounded-xl px-4 py-3 flex items-start gap-2">
-                <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
                 <span>{submitError}</span>
               </div>
             )}
 
-            {/* Success Alert */}
             {submitSuccess && (
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm rounded-xl px-4 py-3 flex items-center gap-2">
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
                 Paket berhasil ditambahkan!
               </div>
             )}
 
-            {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting || submitSuccess || isLoadingRooms}
-              className="w-full py-3 bg-[#143C9C] hover:bg-blue-800 disabled:bg-blue-400/80 dark:disabled:bg-blue-800/50 text-white font-semibold rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none"
+              disabled={isSubmitting || submitSuccess || isLoading}
+              className="w-full py-3 bg-[#143C9C] hover:bg-blue-800 disabled:bg-blue-400/80 dark:disabled:bg-blue-800/50 text-white font-semibold rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5"
             >
-              {isSubmitting ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  {packageToEdit ? 'Menyimpan...' : 'Menambahkan...'}
-                </>
-              ) : submitSuccess ? (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Berhasil!
-                </>
-              ) : (
-                packageToEdit ? 'Simpan Perubahan' : 'Tambah Paket'
-              )}
+              {isSubmitting ? 'Memproses...' : submitSuccess ? 'Berhasil!' : (packageToEdit ? 'Simpan Perubahan' : 'Tambah Paket')}
             </button>
           </form>
         </div>
@@ -591,6 +531,4 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, packageToEdit
   );
 };
 
-
 export default AddPackageModal;
-

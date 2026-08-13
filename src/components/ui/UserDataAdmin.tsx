@@ -6,6 +6,7 @@ import PosIcon from '../../assets/shield_icon.png';
 import PosIconDark from '../../assets/shield_icon_dark.png';
 import OfficeIcon from '../../assets/building_icon.png';
 import OfficeIconDark from '../../assets/building_icon_dark.png';
+import { API_URL } from '../../api/config';
 
 /**
  * Tipe data pengguna
@@ -100,7 +101,7 @@ const UserDataAdmin: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
+      const res = await fetch(`${API_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
@@ -139,7 +140,7 @@ const UserDataAdmin: React.FC = () => {
         try {
           setLoading(true);
           const token = localStorage.getItem('token');
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${id}`, {
+          const res = await fetch(`${API_URL}/users/${id}`, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
           });

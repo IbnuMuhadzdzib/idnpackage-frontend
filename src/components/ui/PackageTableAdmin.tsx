@@ -12,12 +12,14 @@ import RecievedIconDark from '../../assets/hand_icon_dark.png';
 import OfficeIconDark from '../../assets/building_icon_dark.png';
 import PosIconDark from '../../assets/shield_icon_dark.png';
 
-// --- TYPE DEFINITIONS ---
+import { API_URL } from '../../api/config';
 interface Student { id: number; name: string; nis?: string; }
+interface Employee { id: number; name: string; division: string; position?: string; }
 interface Room { id: number; name: string; }
 interface PackageItem {
   id: number;
   studentId?: Student;
+  employeeId?: Employee;
   roomId?: Room;
   location: 'security_post' | 'dormitory_office' | 'taken' | string;
   notes: string | null;
@@ -146,7 +148,7 @@ const PackageTableAdmin: React.FC = () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/packages`, {
+      const response = await fetch(`${API_URL}/packages`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const responseData = await response.json();
@@ -197,7 +199,7 @@ const PackageTableAdmin: React.FC = () => {
           const token = localStorage.getItem('token');
           const results = await Promise.all(
             idsToDelete.map((id) =>
-              fetch(`${import.meta.env.VITE_API_URL}/packages/${id}`, {
+              fetch(`${API_URL}/packages/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` },
               })
@@ -230,7 +232,7 @@ const PackageTableAdmin: React.FC = () => {
           const token = localStorage.getItem('token');
           const results = await Promise.all(
             ids.map((id) =>
-              fetch(`${import.meta.env.VITE_API_URL}/packages/${id}`, {
+              fetch(`${API_URL}/packages/${id}`, {
                 method: 'PATCH',
                 headers: { 
                   'Content-Type': 'application/json',
@@ -269,7 +271,9 @@ const PackageTableAdmin: React.FC = () => {
   };
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
+    // Force UTC parsing by appending 'Z' if it doesn't end with 'Z'
+    const utcDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+    const date = new Date(utcDateString);
     return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
   };
 
@@ -474,8 +478,13 @@ const PackageTableAdmin: React.FC = () => {
                           className="w-4 h-4 rounded border-gray-300 text-[#143C9C] focus:ring-[#143C9C]"
                         />
                       </td>
-                      <td className="px-6 py-4 text-gray-800 dark:text-gray-200 text-sm">
-                        {row.studentId?.name || 'Tidak diketahui'}
+                      <td className="px-6 py-4 text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2">
+                        {row.studentId?.name || row.employeeId?.name || row.manualName || 'Tidak diketahui'}
+                        {row.employeeId ? (
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Staff</span>
+                        ) : row.manualName ? (
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded">Manual</span>
+                        ) : null}
                       </td>
                       <td className="px-6 py-4 text-gray-600 dark:text-gray-400 text-sm">
                         {row.roomId?.name || '-'}

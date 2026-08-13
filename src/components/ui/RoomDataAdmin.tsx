@@ -4,6 +4,7 @@ import ConfirmModal from './ConfirmModal';
 
 import OfficeIcon from '../../assets/building_icon.png';
 import OfficeIconDark from '../../assets/building_icon_dark.png';
+import { API_URL } from '../../api/config';
 
 interface RoomItem {
     id: number;
@@ -66,7 +67,7 @@ const RoomDataAdmin: React.FC = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/rooms`, {
+            const res = await fetch(`${API_URL}/rooms`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const json = await res.json();
@@ -110,7 +111,7 @@ const RoomDataAdmin: React.FC = () => {
                 try {
                     setLoading(true);
                     const token = localStorage.getItem('token');
-                    const res = await fetch(`${import.meta.env.VITE_API_URL}/rooms/${id}`, {
+                    const res = await fetch(`${API_URL}/rooms/${id}`, {
                         method: 'DELETE',
                         headers: { Authorization: `Bearer ${token}` },
                     });

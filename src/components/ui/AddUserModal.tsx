@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CustomDropdown } from './CustomDropdown';
+import { API_URL } from '../../api/config';
 
 interface Room {
     id: number;
@@ -55,7 +56,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSuccess
         const fetchRooms = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/rooms`, {
+                const res = await fetch(`${API_URL}/rooms`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data = await res.json();
@@ -99,8 +100,8 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSuccess
         try {
             const token = localStorage.getItem('token');
             const url = isEditMode
-                ? `${import.meta.env.VITE_API_URL}/users/${userToEdit?.id}`
-                : `${import.meta.env.VITE_API_URL}/users`;
+                ? `${API_URL}/users/${userToEdit?.id}`
+                : `${API_URL}/users`;
             const method = isEditMode ? 'PATCH' : 'POST';
 
             const payload: any = {

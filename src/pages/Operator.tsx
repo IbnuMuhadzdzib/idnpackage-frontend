@@ -8,6 +8,8 @@ import PackageTableAdmin from '../components/ui/PackageTableAdmin';
 import PackageAreaChart from '../components/ui/PackageAreaChart';
 import UserDataAdmin from '../components/ui/UserDataAdmin';
 import RoomDataAdmin from '../components/ui/RoomDataAdmin';
+import StudentDataAdmin from '../components/ui/StudentDataAdmin';
+import EmployeeDataAdmin from '../components/ui/EmployeeDataAdmin';
 
 import { UserModal } from '../components/ui/AddUserModal';
 import { BulkImportModal } from '../components/ui/BulkImportModal';
@@ -30,7 +32,7 @@ function Operator() {
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<'admin' | 'operator'>('operator');
   const [userName, setUserName] = useState<string>('Satpam');
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'packages' | 'users' | 'rooms'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'packages' | 'users' | 'rooms' | 'students' | 'employees'>('dashboard');
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -98,7 +100,7 @@ function Operator() {
             </div>
 
             {/* Tambah Paket & Import Siswa buttons */}
-            {activeTab !== 'users' && activeTab !== 'rooms' && (
+            {activeTab !== 'users' && activeTab !== 'rooms' && activeTab !== 'students' && activeTab !== 'employees' && (
               <div className="flex items-center gap-3">
                 {userRole === 'admin' && (
                   <button
@@ -108,7 +110,7 @@ function Operator() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                     </svg>
-                    Import Data Siswa
+                    Import Data Massal
                   </button>
                 )}
                 
@@ -138,6 +140,19 @@ function Operator() {
                 Tambah User
               </button>
             )}
+            
+            {/* Import Button for Students & Employees */}
+            {userRole === 'admin' && (activeTab === 'students' || activeTab === 'employees') && (
+              <button
+                onClick={() => setIsBulkImportOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Import Data
+              </button>
+            )}
           </section>
 
           {/* --- ADMIN DASHBOARD TAB --- */}
@@ -156,6 +171,16 @@ function Operator() {
           {/* --- ADMIN ROOMS TAB --- */}
           {userRole === 'admin' && activeTab === 'rooms' && (
             <RoomDataAdmin />
+          )}
+
+          {/* --- ADMIN STUDENTS TAB --- */}
+          {userRole === 'admin' && activeTab === 'students' && (
+            <StudentDataAdmin />
+          )}
+
+          {/* --- ADMIN EMPLOYEES TAB --- */}
+          {userRole === 'admin' && activeTab === 'employees' && (
+            <EmployeeDataAdmin />
           )}
 
           {/* --- PACKAGES TAB (For Admin and Operator) --- */}
