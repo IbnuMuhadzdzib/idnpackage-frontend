@@ -20,6 +20,24 @@ function Auth() {
 
     useEffect(() => {
         document.title = "Login - IDN Paketku";
+
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+
+        if (token && userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                if (user.role === 'admin' || user.role === 'operator') {
+                    navigate('/operator', { replace: true });
+                } else {
+                    navigate('/general', { replace: true });
+                }
+            } catch (err) {
+                // Ignore parse error, biarkan di halaman auth dan hapus data rusak
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            }
+        }
     }, []);
 
     /**

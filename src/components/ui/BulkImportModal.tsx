@@ -10,8 +10,8 @@ interface BulkImportModalProps {
   onSuccess?: () => void;
 }
 
-const ResetAllButton: React.FC<{ 
-  onSuccess?: () => void; 
+const ResetAllButton: React.FC<{
+  onSuccess?: () => void;
   onError: (msg: string) => void;
   onSuccessMessage: (msg: string) => void;
 }> = ({ onSuccess, onError, onSuccessMessage }) => {
@@ -26,10 +26,10 @@ const ResetAllButton: React.FC<{
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
-      
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || 'Gagal mereset data');
-      
+
       const deleted = data?.data?.deleted ?? data?.deleted ?? 0;
       onSuccessMessage(`Reset berhasil! ${deleted} santri aktif telah dihapus.`);
       onSuccess?.();
@@ -96,7 +96,18 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
     try {
       const token = localStorage.getItem('token');
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet(`Template_${importType === 'student' ? 'Siswa' : 'Staff'}`);
+      const worksheetName = `Template_${importType === 'student' ? 'Siswa' : 'Staff'}`;
+      const worksheet = workbook.addWorksheet(worksheetName);
+
+      // Definisikan border style yang profesional
+      const borderStyle = {
+        top: { style: 'thin', color: { argb: 'FFBFBFBF' } },
+        left: { style: 'thin', color: { argb: 'FFBFBFBF' } },
+        bottom: { style: 'thin', color: { argb: 'FFBFBFBF' } },
+        right: { style: 'thin', color: { argb: 'FFBFBFBF' } }
+      } as Partial<ExcelJS.Borders>;
+
+      let emptyRowsCount = 10; // Jumlah baris kosong diformat untuk user mengetik
 
       if (importType === 'student') {
         const res = await fetch(`${API_URL}/rooms`, {
@@ -108,10 +119,10 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
 
         worksheet.columns = [
           { header: 'Nama', key: 'name', width: 35 },
-          { header: 'Kamar', key: 'room', width: 25 },
-          { header: 'NIS', key: 'nis', width: 20 },
-          { header: '', key: 'empty', width: 5 },
-          { header: 'Instruksi Pengisian', key: 'instructions', width: 60 }
+          { header: 'Kamar', key: 'room', width: 28 },
+          { header: 'NIS', key: 'nis', width: 25 },
+          { header: '', key: 'empty', width: 3 },
+          { header: 'Instruksi Pengisian Data Santri', key: 'instructions', width: 55 }
         ];
 
         if (roomNames.length > 0) {
@@ -126,42 +137,79 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
           });
         }
 
-        worksheet.addRow({ name: 'Fadlan', room: roomNames[0] || 'Saung 8', nis: '12345', instructions: '1. "Nama" adalah nama lengkap siswa (Wajib isi).' });
-        worksheet.addRow({ name: 'Afsar', room: roomNames[1] || 'Saung 6', nis: '12346', instructions: '2. "Kamar" adalah nama saung/asrama (Pilih dari dropdown).' });
-        worksheet.addRow({ name: 'Zahir', room: roomNames[2] || 'Saung 8', nis: '12347', instructions: '3. "NIS" adalah nomor induk siswa (Opsional).' });
+        worksheet.addRow({ name: 'Fadlan (Contoh)', room: roomNames[0] || 'Saung 8', nis: '12345', instructions: '1. "Nama" wajib diisi dengan nama lengkap.' });
+        worksheet.addRow({ name: 'Afsar (Contoh)', room: roomNames[1] || 'Saung 6', nis: '12346', instructions: '2. "Kamar" wajib dipilih dari dropdown.' });
+        worksheet.addRow({ name: 'Zahir (Contoh)', room: roomNames[2] || 'Saung 8', nis: '12347', instructions: '3. "NIS" (opsional) untuk nomor induk.' });
       } else {
         worksheet.columns = [
           { header: 'Nama', key: 'name', width: 35 },
-          { header: 'Divisi', key: 'division', width: 25 },
+          { header: 'Divisi', key: 'division', width: 28 },
           { header: 'Jabatan', key: 'position', width: 25 },
-          { header: '', key: 'empty', width: 5 },
-          { header: 'Instruksi Pengisian', key: 'instructions', width: 60 }
+          { header: '', key: 'empty', width: 3 },
+          { header: 'Instruksi Pengisian Data Staff', key: 'instructions', width: 55 }
         ];
 
-        worksheet.addRow({ name: 'Budi Hartono', division: 'Sekolah', position: 'Kepala Sekolah', instructions: '1. "Nama" adalah nama lengkap staff/guru (Wajib isi).' });
-        worksheet.addRow({ name: 'Siti Aminah', division: 'Asrama', position: 'Musyrifah', instructions: '2. "Divisi" adalah divisi tempat bekerja (Wajib isi).' });
-        worksheet.addRow({ name: 'Ahmad Dahlan', division: 'Dapur', position: 'Koki', instructions: '3. "Jabatan" adalah jabatan/posisi (Opsional).' });
+        worksheet.addRow({ name: 'Beni Fitriyanto (Contoh)', division: 'Sekolah', position: 'Kepala Sekolah', instructions: '1. "Nama" wajib diisi dengan nama lengkap.' });
+        worksheet.addRow({ name: 'Suhaimy Rizwan (Contoh)', division: 'Asrama', position: 'Musyrif', instructions: '2. "Divisi" wajib diisi sesuai penempatan.' });
+        worksheet.addRow({ name: 'Andi Kobra (Contoh)', division: 'Dapur', position: 'Koki', instructions: '3. "Jabatan" (opsional) dapat dikosongkan.' });
       }
 
+      // Tambahkan instruksi sisa di baris ke 5 dan 6
+      worksheet.getCell('E5').value = '4. Baris (Contoh) di atas boleh dihapus/ditimpa.';
+      worksheet.getCell('E6').value = '5. Jangan merubah judul kolom pada baris 1.';
+
+      // Styling Header (Baris 1)
       const headerRow = worksheet.getRow(1);
+      headerRow.height = 35;
       headerRow.eachCell((cell, colNumber) => {
-        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+        cell.font = { name: 'Calibri', bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+        // Kolom Data (A, B, C)
         if (colNumber <= 3) {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF143C9C' } };
-        } else if (colNumber === 5) {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF63DF8A' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF143C9C' } }; // Biru IDN
+          cell.border = borderStyle;
+        }
+        // Kolom Instruksi (E)
+        else if (colNumber === 5) {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F766E' } }; // Teal
+          cell.border = borderStyle;
         }
       });
-      headerRow.height = 30;
 
-      worksheet.addRow({ instructions: '4. Jangan ubah nama kolom di baris paling atas (baris 1).' });
-      worksheet.addRow({ instructions: '5. Anda bisa menghapus contoh baris data dan menggantinya dengan data Anda.' });
+      // Tambahkan baris kosong diformat agar template rapi
+      for (let i = 0; i < emptyRowsCount; i++) {
+        worksheet.addRow({});
+      }
 
-      for (let i = 2; i <= 7; i++) {
-        const instCell = worksheet.getCell(`E${i}`);
-        instCell.alignment = { vertical: 'top', wrapText: true };
-        if (i > 4) worksheet.getRow(i).height = 25;
+      const totalRows = 4 + emptyRowsCount;
+
+      // Styling Baris Data dan Instruksi
+      for (let i = 2; i <= totalRows; i++) {
+        const row = worksheet.getRow(i);
+        row.height = 25; // Tinggi baris yang nyaman
+
+        // Styling Kolom Data (A, B, C)
+        for (let col = 1; col <= 3; col++) {
+          const cell = row.getCell(col);
+          cell.border = borderStyle;
+          cell.font = { name: 'Calibri', size: 11, color: { argb: 'FF333333' } };
+          cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+
+          // Beri warna latar abu-abu sangat muda untuk baris contoh
+          if (i <= 4) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } };
+          }
+        }
+
+        // Styling Kolom Instruksi (E)
+        const instCell = row.getCell(5);
+        if (i <= 6) {
+          instCell.border = borderStyle;
+          instCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } }; // Latar hijau sgt muda
+          instCell.font = { name: 'Calibri', size: 11, italic: true, color: { argb: 'FF065F46' } };
+          instCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1, wrapText: true };
+        }
       }
 
       const buffer = await workbook.xlsx.writeBuffer();
@@ -187,16 +235,16 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws);
-        
+
         let formattedData = [];
-        
+
         if (importType === 'student') {
           formattedData = data.map((row: any) => ({
             name: String(row['Nama'] || row['name'] || row['Nama Siswa'] || '').trim(),
             roomName: String(row['Kamar'] || row['room'] || row['Saung'] || row['Asrama'] || '').trim(),
             nis: row['NIS'] || row['nis'] ? String(row['NIS'] || row['nis']).trim() : '',
           })).filter((item: any) => item.name && item.roomName);
-          
+
           if (formattedData.length === 0) {
             setError("Data kosong atau format kolom tidak sesuai. Pastikan ada kolom 'Nama' dan 'Kamar'.");
             return;
@@ -234,7 +282,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
       const token = localStorage.getItem('token');
       const endpoint = importType === 'student' ? '/students/bulk' : '/employees/bulk';
       const payloadKey = importType === 'student' ? 'students' : 'employees';
-      
+
       const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: {
@@ -245,7 +293,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
       });
 
       const resData = await res.json();
-      
+
       if (!res.ok) {
         let errorMsg = 'Gagal melakukan import data.';
         if (resData?.message) {
@@ -285,21 +333,19 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
           <div className="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-lg">
             <button
               onClick={() => handleTypeChange('student')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-                importType === 'student'
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${importType === 'student'
                   ? 'bg-white dark:bg-slate-700 text-[#143C9C] dark:text-blue-400 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
               Data Santri
             </button>
             <button
               onClick={() => handleTypeChange('employee')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-                importType === 'employee'
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${importType === 'employee'
                   ? 'bg-white dark:bg-slate-700 text-[#143C9C] dark:text-blue-400 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
               Data Staff & Guru
             </button>
@@ -320,13 +366,13 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
 
           <div className="mb-6 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-5 shadow-sm relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 dark:bg-blue-900/20 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none transition-all group-hover:bg-blue-100 dark:group-hover:bg-blue-800/30"></div>
-            
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
               <div>
                 <h3 className="text-sm font-bold text-gray-800 dark:text-white mb-1">Belum punya formatnya?</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Unduh template Excel resmi untuk mempermudah pengisian data.</p>
               </div>
-              <button 
+              <button
                 onClick={handleDownloadTemplate}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 dark:from-slate-700 dark:to-slate-600 dark:hover:from-slate-600 dark:hover:to-slate-500 text-[#143C9C] dark:text-blue-300 font-semibold text-xs rounded-lg transition-all shadow-sm hover:shadow active:scale-95 border border-blue-200/50 dark:border-slate-600 w-full md:w-auto"
               >
@@ -352,10 +398,10 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                 Klik untuk memilih file Excel (.xlsx, .csv)
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Atau seret & letakkan file di sini</p>
-              
-              <input 
-                type="file" 
-                accept=".xlsx, .xls, .csv" 
+
+              <input
+                type="file"
+                accept=".xlsx, .xls, .csv"
                 onChange={handleFileUpload}
                 ref={fileInputRef}
                 className="hidden"
@@ -436,21 +482,21 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
         </div>
 
         <div className="px-6 py-4 border-t border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800 flex items-center justify-between gap-3">
-          <ResetAllButton 
-            onSuccess={onSuccess} 
+          <ResetAllButton
+            onSuccess={onSuccess}
             onError={setError}
             onSuccessMessage={setSuccessMsg}
           />
 
           <div className="flex gap-3">
-            <button 
+            <button
               onClick={onClose}
               className="px-4 py-2 text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
             >
               {importResult ? 'Tutup' : 'Batal'}
             </button>
             {!importResult && (
-              <button 
+              <button
                 onClick={handleImport}
                 disabled={dataPreview.length === 0 || isSubmitting}
                 className="px-6 py-2 bg-[#143C9C] hover:bg-blue-800 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors shadow-md flex items-center gap-2"
@@ -458,8 +504,8 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({ isOpen, onClos
                 {isSubmitting ? (
                   <>
                     <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                     Menyimpan...
                   </>

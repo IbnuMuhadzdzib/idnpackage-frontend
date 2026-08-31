@@ -17,11 +17,7 @@ import ProtectedRoute from './components/layout/ProtectedRoute.tsx'
 const router = createBrowserRouter ([
   {
     path: '/',
-    element: (
-      <ProtectedRoute>
-        <Navigate to="/auth" replace />
-      </ProtectedRoute>
-    ),
+    element: <Navigate to="/auth" replace />,
   },
   {
     path: '/operator',
