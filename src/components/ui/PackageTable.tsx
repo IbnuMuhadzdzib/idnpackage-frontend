@@ -67,6 +67,7 @@ const PackageTable: React.FC<PackageTableProps> = ({
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [showAllDates, setShowAllDates] = useState<boolean>(false);
 
   const [tableData, setTableData] = useState<PackageItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -145,7 +146,13 @@ const PackageTable: React.FC<PackageTableProps> = ({
 
   const handleDateSelect = (day: number) => {
     setSelectedDate(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day));
+    setShowAllDates(false); // Pilih tanggal spesifik → matikan mode semua tanggal
     setIsDatePickerOpen(false);
+  };
+
+  const formatFullDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
   const today = new Date();
@@ -159,14 +166,18 @@ const PackageTable: React.FC<PackageTableProps> = ({
   };
 
   const filteredData = tableData.filter((row) => {
-    // 1. Date Filter
     if (!row.createdAt) return false;
-    const itemDate = new Date(row.createdAt);
-    const dateMatch = (
-      itemDate.getDate() === selectedDate.getDate() &&
-      itemDate.getMonth() === selectedDate.getMonth() &&
-      itemDate.getFullYear() === selectedDate.getFullYear()
-    );
+
+    // 1. Date Filter — skip jika showAllDates aktif
+    let dateMatch = true;
+    if (!showAllDates) {
+      const itemDate = new Date(row.createdAt);
+      dateMatch = (
+        itemDate.getDate() === selectedDate.getDate() &&
+        itemDate.getMonth() === selectedDate.getMonth() &&
+        itemDate.getFullYear() === selectedDate.getFullYear()
+      );
+    }
 
     // 2. Location Filter
     let locationMatch = true;
@@ -179,17 +190,20 @@ const PackageTable: React.FC<PackageTableProps> = ({
     }
 
     // 3. Search Query Match
-    const searchMatch = searchQuery === '' || 
+    const searchMatch = searchQuery === '' ||
       (row.studentId?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (row.employeeId?.name || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     // 4. Room Match
-    // Jika "Semua Kamar" dipilih, tampilkan semua (termasuk staff)
-    // Jika kamar tertentu dipilih, hanya tampilkan paket santri dengan kamar tsb (hilangkan staff)
     const roomMatch = selectedRoom === 'Semua Kamar' || (!row.employeeId && row.roomId?.name === selectedRoom);
 
     return dateMatch && locationMatch && searchMatch && roomMatch;
   });
+
+  // Sort: kalau showAllDates, urutkan dari terbaru
+  const displayData = showAllDates
+    ? [...filteredData].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    : filteredData;
 
   return (
     <>
@@ -215,16 +229,44 @@ const PackageTable: React.FC<PackageTableProps> = ({
         <div className="bg-[#F6F7F9] dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-2xl overflow-hidden transition-colors mt-4">
           {/* Header Section */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-300 dark:border-slate-700">
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white tracking-wide">Data Paket</h2>
-            <button
-              onClick={() => setIsDatePickerOpen(true)}
-              className="flex items-center gap-2 px-2 md:px-4 py-2 text-[#2D3A8C] dark:text-blue-300 border border-[#2D3A8C] dark:border-blue-400 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span className="font-semibold hidden md:inline">{formatDate(selectedDate)}</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white tracking-wide">Data Paket</h2>
+              {showAllDates && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 animate-pulse">
+                  Semua Tanggal
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Toggle Semua Tanggal */}
+              <button
+                onClick={() => setShowAllDates(prev => !prev)}
+                title={showAllDates ? 'Kembali ke tanggal spesifik' : 'Tampilkan semua tanggal'}
+                className={`flex items-center gap-1.5 px-2.5 md:px-3.5 py-2 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 border ${showAllDates
+                    ? 'bg-[#143C9C] text-white border-[#143C9C] dark:bg-blue-600 dark:border-blue-500'
+                    : 'text-gray-500 dark:text-gray-400 border-gray-300 dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-slate-700'
+                  }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span className="hidden md:inline">{showAllDates ? 'Reset' : 'Semua'}</span>
+              </button>
+
+              {/* Date Picker — selalu tampil, tapi di-mute kalau showAllDates */}
+              <button
+                onClick={() => setIsDatePickerOpen(true)}
+                className={`flex items-center gap-2 px-2 md:px-4 py-2 border rounded-xl transition-colors ${showAllDates
+                    ? 'text-gray-400 dark:text-gray-500 border-gray-200 dark:border-slate-700 opacity-60 hover:opacity-90 hover:bg-gray-50 dark:hover:bg-slate-700'
+                    : 'text-[#2D3A8C] dark:text-blue-300 border-[#2D3A8C] dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700'
+                  }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="font-semibold hidden md:inline">{formatDate(selectedDate)}</span>
+              </button>
+            </div>
           </div>
 
           {/* Table Section */}
@@ -236,6 +278,9 @@ const PackageTable: React.FC<PackageTableProps> = ({
                   <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Kamar</th>
                   <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Catatan</th>
                   <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Foto</th>
+                  {showAllDates && (
+                    <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Tanggal Masuk</th>
+                  )}
                   <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Lokasi / Status</th>
                   <th className="px-6 py-4 font-medium text-gray-700 dark:text-gray-300">Action</th>
                 </tr>
@@ -243,18 +288,31 @@ const PackageTable: React.FC<PackageTableProps> = ({
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-10 text-gray-500">
+                    <td colSpan={showAllDates ? 7 : 6} className="text-center py-10 text-gray-500">
                       Memuat data paket...
                     </td>
                   </tr>
-                ) : filteredData.length === 0 ? (
+                ) : displayData.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-10 text-gray-500">
-                      Belum ada data paket untuk tanggal ini.
+                    <td colSpan={showAllDates ? 7 : 6} className="text-center py-10 text-gray-500">
+                      {showAllDates
+                        ? 'Belum ada data paket sama sekali.'
+                        : (
+                          <span>
+                            Belum ada data paket untuk tanggal ini.{' '}
+                            <button
+                              onClick={() => setShowAllDates(true)}
+                              className="text-[#143C9C] dark:text-blue-400 underline font-medium hover:no-underline"
+                            >
+                              Cari di semua tanggal?
+                            </button>
+                          </span>
+                        )
+                      }
                     </td>
                   </tr>
                 ) : (
-                  filteredData.map((row) => {
+                  displayData.map((row) => {
                     const badge = getLocationBadge(row.location);
                     return (
                       <tr key={row.id} className="hover:bg-gray-100/50 dark:hover:bg-slate-700/50 transition-colors border-b border-gray-200 dark:border-slate-700 last:border-0">
@@ -279,6 +337,11 @@ const PackageTable: React.FC<PackageTableProps> = ({
                             <span className="text-gray-400 italic text-xs">No photo</span>
                           )}
                         </td>
+                        {showAllDates && (
+                          <td className="px-6 py-4 text-gray-500 dark:text-gray-400 text-xs">
+                            {formatFullDate(row.createdAt)}
+                          </td>
+                        )}
                         <td className="px-6 py-4">
                           <span className={`px-4 py-1.5 rounded-full font-medium text-[13px] inline-block min-w-[90px] text-center ${badge.color}`}>
                             {badge.label}
