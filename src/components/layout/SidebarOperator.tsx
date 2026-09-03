@@ -27,7 +27,7 @@ type TabKey = 'dashboard' | 'packages' | 'users' | 'rooms' | 'students' | 'emplo
 interface NavItem {
   key: TabKey;
   title: string;
-  icon: JSX.Element;
+  icon: React.ReactElement;
 }
 
 // Icon SVG helpers
@@ -117,11 +117,10 @@ const SidebarOperator: React.FC<SidebarOperatorProps> = ({
         <button
           title="Dashboard"
           onClick={() => handleTabSelect('dashboard')}
-          className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold border transition-all duration-200 mb-6 ${
-            activeTab === 'dashboard'
-              ? 'bg-blue-50 dark:bg-slate-800 text-[#143C9C] dark:text-blue-400 border-blue-100 dark:border-slate-700 shadow-sm'
-              : 'bg-transparent text-gray-400 border-transparent hover:bg-gray-50 dark:hover:bg-slate-800/50'
-          }`}
+          className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold border transition-all duration-200 mb-6 ${activeTab === 'dashboard'
+            ? 'bg-blue-50 dark:bg-slate-800 text-[#143C9C] dark:text-blue-400 border-blue-100 dark:border-slate-700 shadow-sm'
+            : 'bg-transparent text-gray-400 border-transparent hover:bg-gray-50 dark:hover:bg-slate-800/50'
+            }`}
         >
           <img src={LogoLight} alt="Logo" className="size-9 dark:hidden" />
           <img src={LogoDark} alt="Logo" className="size-9 hidden dark:block" />
@@ -134,11 +133,10 @@ const SidebarOperator: React.FC<SidebarOperatorProps> = ({
               key={item.key}
               title={item.title}
               onClick={() => handleTabSelect(item.key)}
-              className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center transition-all duration-200 ${
-                activeTab === item.key
-                  ? 'bg-[#143C9C] text-white shadow-md'
-                  : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-[#143C9C] dark:hover:text-blue-400'
-              }`}
+              className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center transition-all duration-200 ${activeTab === item.key
+                ? 'bg-[#143C9C] text-white shadow-md'
+                : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-[#143C9C] dark:hover:text-blue-400'
+                }`}
             >
               {item.icon}
             </button>
